@@ -14,8 +14,8 @@ RUN curl -fsSL https://pixi.sh/install.sh | sh
 ENV PATH=$PATH:/root/.pixi/bin
 
 # Get this source
-COPY . roscon25-workshop
-WORKDIR /roscon25-workshop
+COPY . rl_deliberation
+WORKDIR /rl_deliberation
 
 # Build workspace
 RUN pixi run build
