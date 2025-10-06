@@ -47,12 +47,6 @@ def get_args() -> argparse.Namespace:
         choices=["DQN", "PPO", "SAC", "A2C"],
         help="The model type to train.",
     )
-    parser.add_argument("--total-timesteps", default=100)
-    parser.add_argument(
-        "--discrete_actions",
-        action="store_true",
-        help="If true, uses discrete action space. Otherwise, uses continuous action space.",
-    )
     parser.add_argument(
         "--discrete-actions",
         action="store_true",
