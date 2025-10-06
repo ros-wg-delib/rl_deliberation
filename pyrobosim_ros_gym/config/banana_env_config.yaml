@@ -34,7 +34,7 @@ training:
     policy_kwargs:
       activation_fn: torch.nn.ReLU
       pi: [64, 64]  # actor size
-      vf: [32, 32]  # critic size\
+      vf: [32, 32]  # critic size
 
   SAC:
     gamma: 0.99
