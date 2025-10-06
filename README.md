@@ -75,6 +75,7 @@ pixi run start_world --env GreenhousePlain
 
 All the following commands assume that the environment is running. You can also run the environment in headless mode for training.
 
+<!--- skip-next --->
 ```bash
 pixi run start_world --env GreenhousePlain --headless
 ```
@@ -85,9 +86,16 @@ But first, we can explore the environment with a random agent.
 
 Assuming the environment is running, execute the evaluation script in another terminal:
 
+<!--- skip-next --->
 ```bash
 pixi run eval --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1
 ```
+<!--- workdir: /rl_deliberation --->
+<!--
+```bash
+pixi run start_world --env GreenhousePlain --headless & pid=$!; pixi run eval --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1; kill $pid
+```
+-->
 
 In your terminal, you will see multiple sections in the following format:
 
