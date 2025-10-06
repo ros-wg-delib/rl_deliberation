@@ -3,12 +3,12 @@
 <package format="3">
   <name>rl_ws_worlds</name>
   <version>1.0.0</version>
-  <description>Example worlds for the ROS 2 Deliberation Workshop</description>
+  <description>Example worlds for exploring reinforment learning.</description>
   <maintainer email="christian.henkel2@de.bosch.com">Christian Henkel</maintainer>
+  <maintainer email="sebas.a.castro@gmail.com">Sebastian Castro</maintainer>
   <license>BSD-3-Clause</license>
 
   <depend>pyrobosim_ros</depend>
-  <!-- <depend>rl_ws_problem_interface</depend> -->
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
