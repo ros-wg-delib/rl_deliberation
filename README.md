@@ -76,7 +76,7 @@ For example PPO
 
 <!--- skip-next --->
 ```bash
-pixi run train --env BananaPick --model-type PPO --log
+pixi run train --env BananaPick --config banana_env_config.yaml --model-type PPO --log
 ```
 
 Or DQN.
