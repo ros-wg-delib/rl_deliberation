@@ -251,6 +251,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
     def eval(self):
         """Return values of custom metrics for evaluation."""
+        print("eval ...")
         return {
             "watered_plant_percent": float(self.watered_plant_percent()),
             "water_tank_level": float(self.water_tank_level()),
