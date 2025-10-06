@@ -22,6 +22,7 @@ from stable_baselines3.common.callbacks import (
     StopTrainingOnRewardThreshold,
 )
 from stable_baselines3.common.base_class import BaseAlgorithm
+from stable_baselines3.common.callbacks import BaseCallback
 import yaml
 
 from pyrobosim_ros_gym.envs import get_env_by_name, available_envs_w_subtype
@@ -57,7 +58,10 @@ def get_args() -> argparse.Namespace:
         "--realtime", action="store_true", help="If true, slows down to real time."
     )
     parser.add_argument(
-        "--log", action="store_true", help="If true, logs data to Tensorboard."
+        "--log",
+        default=True,
+        action="store_true",
+        help="If true, logs data to Tensorboard.",
     )
     args = parser.parse_args()
     return args
@@ -176,6 +180,7 @@ if __name__ == "__main__":
         total_timesteps=training_config["max_training_steps"],
         progress_bar=True,
         tb_log_name=log_name,
+        log_interval=1,
         callback=eval_callback,
     )
 

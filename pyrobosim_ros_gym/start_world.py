@@ -17,7 +17,10 @@ from pyrobosim.core import WorldYamlLoader
 from pyrobosim.gui import start_gui
 from pyrobosim_ros.ros_interface import WorldROSWrapper
 
-from pyrobosim_ros_gym.envs import get_env_env_class_from_name, available_env_classes
+from pyrobosim_ros_gym.envs import (
+    get_env_class_and_subtype_from_name,
+    available_envs_w_subtype,
+)
 
 
 def create_ros_node(world_file_path) -> WorldROSWrapper:
@@ -34,14 +37,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--env",
-        choices=available_env_classes(),
+        choices=available_envs_w_subtype(),
         help="The environment to use.",
         required=True,
     )
     args = parser.parse_args()
 
-    env_class = get_env_env_class_from_name(args.env)
-    node = create_ros_node(env_class.world_file_path)
+    env_class, sub_type = get_env_class_and_subtype_from_name(args.env)
+    node = create_ros_node(env_class.get_world_file_path(sub_type))
 
     if args.headless:
         # Start ROS node in main thread if there is no GUI.

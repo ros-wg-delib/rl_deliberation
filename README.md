@@ -3,7 +3,7 @@
 This repository contains materials for the [ROSCon 2025](https://roscon.ros.org/2025/) workshop on ROS 2 Deliberation Technologies.
 
 > [!NOTE]
-> This was moved here from https://github.com/ros-wg-delib/roscon25-workshop.
+> This was moved here from <https://github.com/ros-wg-delib/roscon25-workshop>.
 
 ## Setup
 
@@ -54,7 +54,7 @@ To verify your installation, the following should launch a window of PyRoboSim.
 
 <!--- skip-next --->
 ```bash
-pixi run start_world --env Banana
+pixi run start_world --env GreenhousePlain
 ```
 
 To explore the setup, you can also drop into a shell in the Pixi environment.
@@ -66,17 +66,18 @@ pixi shell
 
 ## Explore the environment
 
-There are different environments available. For example, to run the Banana environment:
+There are different environments available. For example, to run the Greenhouse environment:
 
 <!--- skip-next --->
 ```bash
-pixi run start_world --env Banana
+pixi run start_world --env GreenhousePlain
 ```
 
 All the following commands assume that the environment is running. You can also run the environment in headless mode for training.
 
+<!--- skip-next --->
 ```bash
-pixi run start_world --env Banana --headless
+pixi run start_world --env GreenhousePlain --headless
 ```
 
 But first, we can explore the environment with a random agent.
@@ -85,19 +86,28 @@ But first, we can explore the environment with a random agent.
 
 Assuming the environment is running, execute the evaluation script in another terminal:
 
+<!--- skip-next --->
 ```bash
-pixi run eval --model pyrobosim_ros_gym/policies/BananaPick_DQN_random.pt --num-episodes 1
+pixi run eval --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1
 ```
+<!--- workdir: /rl_deliberation --->
+<!--
+```bash
+pixi run start_world --env GreenhousePlain --headless & pid=$!; pixi run eval --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1; kill $pid
+```
+-->
 
 In your terminal, you will see multiple sections in the following format:
 
 ```plaintext
 ..........
-obs=array([ 1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1.,  1.,
-        1.,  1., -1., -1., -1.,  1., -1.,  1., -1., -1.,  1.],
-      dtype=float32)
-action=array(8)
-reward=-2.0
+obs=array([[1.        , 0.99194384],
+       [0.        , 2.7288349 ],
+       [0.        , 3.3768525 ]], dtype=float32)
+action=array(0)
+Maximum steps (10) exceeded. Truncated episode.
+reward=0.0
+custom_metrics={'watered_plant_percent': 0.0, 'water_tank_level': 100.0}
 terminated=False
 truncated=False
 ..........
@@ -105,16 +115,44 @@ truncated=False
 
 This is one step of the environment and the agent's interaction with it.
 
-- `obs` is the observation from the environment, which is a vector of 24 floats representing the state of the agent and its surroundings.
-- `action` is the action taken by the agent, which is `8` in this case, corresponding to placing an object.
-- `reward` is the reward received after taking the action, which is `-2.0` here, a penalty because the robot did not hold any object.
+- `obs` is the observation from the environment. It is a 3x2 array with information about the 3 closest objects plants, each with a class (0 or 1) and the distance to it.
+- `action` is the action taken by the agent. In this simple example, it can choose between 0 = move on and 1 = water plant.
+- `reward` is the reward received after taking the action, which is `0.0` in this case, because the agent did not water any plant.
+- `custom_metrics` provides additional information about the episode:
+  - `watered_plant_percent` indicates the percentage of plants watered thus far in the episode.
+  - `water_tank_level` indicates the current water level in the robot's tank. (This will no decrease for this environment type, but it will later.)
 - `terminated` indicates whether the episode reached a terminal state (e.g., the task was completed or failed).
 - `truncated` indicates whether the episode ended due to a time limit.
 
+In the PyRoboSim window, you should also see the robot moving around at every step.
+
+At the end of the episode, and after all episodes are completed, you will see some more statistics printed in the terminal.
+
+```plaintext
+..........
+<<< Episode 1 finished.
+Total reward: 0.0
+Mean watered_plant_percent: 0.0
+Mean water_tank_level: 100.0
+====================
+Summary:
+Reward over 1 episodes:
+ Mean: 0.0
+ Min: 0.0
+ Max: 0.0
+Custom metric 'watered_plant_percent' over 1 episodes:
+ Mean: 0.0
+ Min: 0.0
+ Max: 0.0
+Custom metric 'water_tank_level' over 1 episodes:
+ Mean: 100.0
+ Min: 100.0
+ Max: 100.0
+```
+
 ## Training a model
 
-### Start Environment
-
+While the environment is running (in headless mode if you prefer), you can train a model.
 
 ### Choose model type
 
@@ -122,7 +160,7 @@ For example PPO
 
 <!--- skip-next --->
 ```bash
-pixi run train --env BananaPick --config banana_env_config.yaml --model-type PPO --log
+pixi run train --env GreenhousePlain --config greenhouse_env_config.yaml --model-type PPO --log
 ```
 
 Or DQN.
@@ -130,8 +168,19 @@ Note that this needs the `--discrete-actions` flag.
 
 <!--- skip-next --->
 ```bash
-pixi run train --env BananaPick --config banana_env_config.yaml --model-type DQN --discrete-actions --log
+pixi run train --env GreenhousePlain --config greenhouse_env_config.yaml --model-type DQN --discrete-actions --log
 ```
+
+Note that ar the end of training, the model name and path will be printed in the terminal:
+
+```plaintext
+New best mean reward!
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━ 100/100  [ 0:00:35 < 0:00:00 , 2 it/s ]
+
+Saved model to GreenhousePlain_PPO_<timestamp>.pt
+```
+
+Remember this path, as you will need it later.
 
 ### You may find tensorboard useful
 
@@ -140,9 +189,11 @@ pixi run train --env BananaPick --config banana_env_config.yaml --model-type DQN
 pixi run tensorboard
 ```
 
+It should contain one entry named after your recent training run (e.g. `GreenhousePlain_PPO_<timestamp>`).
+
 ### See your freshly trained policy in action
 
 <!--- skip-next --->
 ```bash
-pixi run eval --model <path_to_model.pt>
+pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt
 ```

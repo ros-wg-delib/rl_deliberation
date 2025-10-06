@@ -9,6 +9,7 @@
 """Evaluates a trained RL policy."""
 
 import argparse
+from typing import Dict, List
 import rclpy
 from rclpy.node import Node
 from stable_baselines3 import DQN, PPO, SAC, A2C
@@ -71,36 +72,57 @@ if __name__ == "__main__":
         raise RuntimeError(f"Invalid model type: {model_type}")
 
     # Evaluate it for some steps
-    num_episodes = 0
-    obs, _ = env.reset(seed=num_episodes)
-    survived_episodes = 0
-    watered_perc_s = []
-    while num_episodes < args.num_episodes:
-        print("." * 10)
-        print(f"{obs=}")
-        action, _ = model.predict(obs, deterministic=True)
-        print(f"{action=}")
-        obs, reward, terminated, truncated, info = env.step(action)
+    reward_per_episode = [0.0 for _ in range(args.num_episodes)]
+    custom_metrics_store: Dict[str, List[float]] = {}
+    custom_metrics_episode_mean: Dict[str, float] = {}
+    custom_metrics_per_episode: Dict[str, List[float]] = {}
+    for i_e in range(args.num_episodes):
+        print(f">>> Starting episode {i_e+1}/{args.num_episodes}")
+        obs, _ = env.reset(seed=i_e + args.seed)
+        terminated = False
+        truncated = False
+        i_step = 0
+        while not (terminated or truncated):
+            print(f"{obs=}")
+            action, _ = model.predict(obs, deterministic=True)
+            print(f"{action=}")
+            obs, reward, terminated, truncated, info = env.step(action)
+            custom_metrics = env.eval()
 
-        print(f"{reward=}")
-        print(f"{terminated=}")
-        print(f"{truncated=}")
-        if terminated or truncated:
-            num_episodes += 1
-            if isinstance(env, GreenhouseEnv):
-                survived_episodes += not env.dead()
-                watered_plant_percent = env.watered_plant_percent()
-                print(f".. {watered_plant_percent*100}% Plants watered.")
-                watered_perc_s.append(watered_plant_percent)
-            elif isinstance(env, BananaEnv):
-                survived_episodes += info["success"]
+            print(f"{reward=}")
+            reward_per_episode[i_e] += reward
 
-            env.reset(seed=num_episodes)
+            print(f"{custom_metrics=}")
+            for k, v in custom_metrics.items():
+                if k not in custom_metrics_store:
+                    custom_metrics_store[k] = []
+                custom_metrics_store[k].append(v)
 
-    print(
-        f"{survived_episodes} of {num_episodes} ({100.0*survived_episodes/num_episodes}%) episodes survived."
-    )
-    if isinstance(env, GreenhouseEnv):
-        print(f"{watered_perc_s=}")
+            print(f"{terminated=}")
+            print(f"{truncated=}")
+            print("." * 10)
+            if terminated or truncated:
+                print(f"<<< Episode {i_e+1} finished.")
+                print(f"Total reward: {reward_per_episode[i_e]}")
+                for k, v in custom_metrics_store.items():
+                    mean_metric = sum(v) / len(v) if len(v) > 0 else 0.0
+                    custom_metrics_episode_mean[k] = mean_metric
+                    if k not in custom_metrics_per_episode:
+                        custom_metrics_per_episode[k] = []
+                    custom_metrics_per_episode[k].append(mean_metric)
+                    print(f"Mean {k}: {mean_metric}")
+                print("=" * 20)
+                break
+
+    print("Summary:")
+    print(f"Reward over {args.num_episodes} episodes:")
+    print(f" Mean: {sum(reward_per_episode)/args.num_episodes}")
+    print(f" Min: {min(reward_per_episode)}")
+    print(f" Max: {max(reward_per_episode)}")
+    for k, v in custom_metrics_per_episode.items():
+        print(f"Custom metric '{k}' over {args.num_episodes} episodes:")
+        print(f" Mean: {sum(v)/args.num_episodes}")
+        print(f" Min: {min(v)}")
+        print(f" Max: {max(v)}")
 
     rclpy.shutdown()

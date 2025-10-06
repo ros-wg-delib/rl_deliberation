@@ -64,7 +64,7 @@ jobs:
           echo "TAG_NAME=latest" >> $GITHUB_ENV
         if: github.ref == 'refs/heads/main'
 
-  doc_test:
+  pytest:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
