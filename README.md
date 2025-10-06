@@ -2,6 +2,9 @@
 
 This repository contains materials for the [ROSCon 2025](https://roscon.ros.org/2025/) workshop on ROS 2 Deliberation Technologies.
 
+> [!NOTE]
+> This was moved here from https://github.com/ros-wg-delib/roscon25-workshop.
+
 ## Setup
 
 This repo uses Pixi and RoboStack along with ROS 2 Kilted.
@@ -37,12 +40,12 @@ echo 'export PATH=\"/root/.pixi/bin:$PATH\"' >> /root/.bashrc
 Clone the repo including submodules.
 
 ```bash
-git clone --recursive https://github.com/ros-wg-delib/roscon25-workshop.git
+git clone --recursive https://github.com/ros-wg-delib/rl_deliberation.git
 ```
 
 Build the environment.
 
-<!--- workdir: /roscon25-workshop --->
+<!--- workdir: /rl_deliberation --->
 ```bash
 pixi run build
 ```
