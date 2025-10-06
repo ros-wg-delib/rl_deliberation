@@ -50,28 +50,71 @@ Build the environment.
 pixi run build
 ```
 
-Launch an example demo.
+To verify your installation, the following should launch a window of PyRoboSim.
 
 <!--- skip-next --->
 ```bash
-pixi run pyrobosim_demo
+pixi run start_world --env Banana
 ```
 
-You can also drop into a shell in the Pixi environment.
+To explore the setup, you can also drop into a shell in the Pixi environment.
 
 <!--- skip-next --->
 ```bash
 pixi shell
 ```
 
+## Explore the environment
+
+There are different environments available. For example, to run the Banana environment:
+
+<!--- skip-next --->
+```bash
+pixi run start_world --env Banana
+```
+
+All the following commands assume that the environment is running. You can also run the environment in headless mode for training.
+
+```bash
+pixi run start_world --env Banana --headless
+```
+
+But first, we can explore the environment with a random agent.
+
+## Evaluating with a random agent
+
+Assuming the environment is running, execute the evaluation script in another terminal:
+
+```bash
+pixi run eval --model pyrobosim_ros_gym/policies/BananaPick_DQN_random.pt --num-episodes 1
+```
+
+In your terminal, you will see multiple sections in the following format:
+
+```plaintext
+..........
+obs=array([ 1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1.,  1.,
+        1.,  1., -1., -1., -1.,  1., -1.,  1., -1., -1.,  1.],
+      dtype=float32)
+action=array(8)
+reward=-2.0
+terminated=False
+truncated=False
+..........
+```
+
+This is one step of the environment and the agent's interaction with it.
+
+- `obs` is the observation from the environment, which is a vector of 24 floats representing the state of the agent and its surroundings.
+- `action` is the action taken by the agent, which is `8` in this case, corresponding to placing an object.
+- `reward` is the reward received after taking the action, which is `-2.0` here, a penalty because the robot did not hold any object.
+- `terminated` indicates whether the episode reached a terminal state (e.g., the task was completed or failed).
+- `truncated` indicates whether the episode ended due to a time limit.
+
 ## Training a model
 
 ### Start Environment
 
-<!--- skip-next --->
-```bash
-pixi run start_world --env Banana --headless
-```
 
 ### Choose model type
 

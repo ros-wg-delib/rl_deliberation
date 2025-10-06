@@ -1,5 +1,6 @@
 """Utilities for the banana test environment."""
 
+from pprint import pprint
 import os
 from enum import Enum
 import rclpy
@@ -101,6 +102,8 @@ class BananaEnv(PyRoboSimRosEnv):
             idx += 1
         self.integer_to_action[idx] = TaskAction(type="place")
         self.num_actions = len(self.integer_to_action)
+        print("self.integer_to_action=")
+        pprint(self.integer_to_action)
 
         if self.discrete_actions:
             return spaces.Discrete(self.num_actions)

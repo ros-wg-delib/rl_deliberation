@@ -9,18 +9,19 @@
 """Evaluates a trained RL policy."""
 
 import argparse
-
 import rclpy
 from rclpy.node import Node
 from stable_baselines3 import DQN, PPO, SAC, A2C
 from stable_baselines3.common.base_class import BaseAlgorithm
 
 from pyrobosim_ros_gym.envs import get_env_by_name, BananaEnv, GreenhouseEnv
-
+import os
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", help="The name of the model to evaluate.")
+    parser.add_argument(
+        "--model", required=True, help="The name of the model to evaluate."
+    )
     parser.add_argument(
         "--discrete-actions",
         action="store_true",
@@ -35,7 +36,12 @@ if __name__ == "__main__":
     parser.add_argument("--seed", default=42, type=int, help="The RNG seed to use.")
     args = parser.parse_args()
 
-    model_name_parts = args.model.split("_")
+    assert os.path.isfile(args.model), f"Model {args.model} must be a valid file."
+    model_fname = os.path.basename(args.model)
+    model_name_parts = model_fname.split("_")
+    assert (
+        len(model_name_parts) >= 2
+    ), f"Model name {model_fname} must be of the form <env>_<model>[_<otherinfo>].pt"
     env_type = model_name_parts[0]
     model_type = model_name_parts[1]
 
