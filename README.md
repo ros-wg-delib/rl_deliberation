@@ -3,7 +3,7 @@
 This repository contains materials for the [ROSCon 2025](https://roscon.ros.org/2025/) workshop on ROS 2 Deliberation Technologies.
 
 > [!NOTE]
-> This was moved here from https://github.com/ros-wg-delib/roscon25-workshop.
+> This was moved here from <https://github.com/ros-wg-delib/roscon25-workshop>.
 
 ## Setup
 
@@ -111,10 +111,11 @@ This is one step of the environment and the agent's interaction with it.
 - `terminated` indicates whether the episode reached a terminal state (e.g., the task was completed or failed).
 - `truncated` indicates whether the episode ended due to a time limit.
 
+In the PyRoboSim window, you should also see the robot moving around at every step.
+
 ## Training a model
 
 ### Start Environment
-
 
 ### Choose model type
 

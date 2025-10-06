@@ -7,8 +7,8 @@ training:
 
   # Evaluations during training
   eval:
-    n_eval_episodes: 10
-    eval_freq: 1000
+    # n_eval_episodes: 10
+    eval_freq: 1
 
   # Individual algorithm options
   DQN:

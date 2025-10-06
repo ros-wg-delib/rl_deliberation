@@ -7,7 +7,7 @@ from gymnasium import spaces
 from pyrobosim_msgs.msg import TaskAction, WorldState
 
 from .pyrobosim_ros_env import PyRoboSimRosEnv
-
+from pprint import pprint
 from pyrobosim_msgs.action import ExecuteTaskAction
 from pyrobosim_msgs.msg import TaskAction, WorldState
 from pyrobosim_msgs.srv import RequestWorldState, ResetWorld
@@ -19,8 +19,19 @@ def _dist(a: Point, b: Point) -> float:
 
 
 class GreenhouseEnv(PyRoboSimRosEnv):
-    sub_types = Enum("sub_types", "Deterministic Random")
-    world_file_path = os.path.join("rl_ws_worlds", "worlds", "greenhouse.yaml")
+    sub_types = Enum("sub_types", "Plain Battery Random")
+
+    @classmethod
+    def get_world_file_path(cls, sub_type: sub_types) -> str:
+        """Get the world file path for a given subtype."""
+        if sub_type == GreenhouseEnv.sub_types.Plain:
+            return os.path.join("rl_ws_worlds", "worlds", "greenhouse_plain.yaml")
+        elif sub_type == GreenhouseEnv.sub_types.Battery:
+            return os.path.join("rl_ws_worlds", "worlds", "greenhouse_battery.yaml")
+        elif sub_type == GreenhouseEnv.sub_types.Random:
+            return os.path.join("rl_ws_worlds", "worlds", "greenhouse_random.yaml")
+        else:
+            raise ValueError(f"Invalid environment: {sub_type}")
 
     def __init__(
         self,
@@ -39,11 +50,14 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         :param realtime: Whether actions take time.
         :param discrete_actions: Choose discrete actions (needed for DQN).
         """
-        if sub_type == GreenhouseEnv.sub_types.Deterministic:
-            # TODO
+        if sub_type == GreenhouseEnv.sub_types.Plain:
+            # All plants are in their places
             pass
         elif sub_type == GreenhouseEnv.sub_types.Random:
-            # TODO
+            # Plants are randomly across tables
+            pass
+        elif sub_type == GreenhouseEnv.sub_types.Battery:
+            # Battery (= water) is limited
             pass
         else:
             raise ValueError(f"Invalid environment: {sub_type}")
@@ -164,6 +178,9 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         if all(self.watered.values()):
             terminated = True
 
+        if self.water_tank_level() <= 0:
+            terminated = True
+
         return reward, terminated
 
     def dead(self):
@@ -175,6 +192,10 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             if w:
                 n_watered += 1
         return n_watered / len(self.watered)
+
+    def water_tank_level(self):
+        robot_state = self.world_state.robots[0]
+        return robot_state.battery_level
 
     def _get_plants_by_distance(self, world_state: WorldState):
         robot_state = world_state.robots[0]
@@ -227,6 +248,13 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
         self.world_state = world_state
         return obs
+
+    def eval(self):
+        """Return values of custom metrics for evaluation."""
+        return {
+            "watered_plant_percent": float(self.watered_plant_percent()),
+            "water_tank_level": float(self.water_tank_level()),
+        }
 
     def get_next_navigation_action(self):
         self.waypoint_i = (self.waypoint_i + 1) % len(self.waypoints)
