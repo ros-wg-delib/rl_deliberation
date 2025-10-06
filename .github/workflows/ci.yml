@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/roscon_delib_ws_2025
+  REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/rl_deliberation
   RAW_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
 jobs:
