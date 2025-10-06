@@ -79,7 +79,7 @@ For example PPO
 
 <!--- skip-next --->
 ```bash
-pixi run train --env BananaPick --model-type PPO --log
+pixi run train --env BananaPick --config banana_env_config.yaml --model-type PPO --log
 ```
 
 Or DQN.
@@ -87,7 +87,7 @@ Note that this needs the `--discrete-actions` flag.
 
 <!--- skip-next --->
 ```bash
-pixi run train --env PickBanana --model-type DQN --discrete-actions --log
+pixi run train --env BananaPick --config banana_env_config.yaml --model-type DQN --discrete-actions --log
 ```
 
 ### You may find tensorboard useful
