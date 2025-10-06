@@ -1,5 +1,6 @@
 """Utilities for the banana test environment."""
 
+from pprint import pprint
 import os
 from enum import Enum
 import rclpy
@@ -14,7 +15,11 @@ from .pyrobosim_ros_env import PyRoboSimRosEnv
 
 class BananaEnv(PyRoboSimRosEnv):
     sub_types = Enum("sub_types", "Pick Place PlaceNoSoda")
-    world_file_path = os.path.join("rl_ws_worlds", "worlds", "banana.yaml")
+
+    @classmethod
+    def get_world_file_path(cls, _: sub_types) -> str:
+        """Get the world file path for a given subtype."""
+        return os.path.join("rl_ws_worlds", "worlds", "banana.yaml")
 
     def __init__(
         self,
@@ -101,6 +106,8 @@ class BananaEnv(PyRoboSimRosEnv):
             idx += 1
         self.integer_to_action[idx] = TaskAction(type="place")
         self.num_actions = len(self.integer_to_action)
+        print("self.integer_to_action=")
+        pprint(self.integer_to_action)
 
         if self.discrete_actions:
             return spaces.Discrete(self.num_actions)
@@ -194,6 +201,30 @@ class BananaEnv(PyRoboSimRosEnv):
         self.world_state = world_state
         return obs
 
+    def eval(self):
+        """Return values of custom metrics for evaluation."""
+        return {
+            "at_banana_location": float(is_at_banana_location(self)),
+            "holding_banana": float(is_holding_banana(self)),
+        }
+
+
+def is_at_banana_location(env):
+    robot_state = env.world_state.robots[0]
+    for obj in env.world_state.objects:
+        if obj.category == "banana":
+            if obj.parent == robot_state.last_visited_location:
+                return True
+    return False
+
+
+def is_holding_banana(env):
+    robot_state = env.world_state.robots[0]
+    for obj in env.world_state.objects:
+        if obj.category == "banana" and obj.name == robot_state.manipulated_object:
+            return True
+    return False
+
 
 def banana_picked_reward(env, goal, action_result):
     """
@@ -223,21 +254,12 @@ def banana_picked_reward(env, goal, action_result):
         reward -= 0.5
     # Robot gets positive reward based on holding a banana,
     # and negative reward for being in locations without bananas.
-    at_banana_location = False
-    for obj in env.world_state.objects:
-        if obj.category == "banana":
-            if obj.parent == robot_state.last_visited_location:
-                at_banana_location = True
-            elif obj.name == robot_state.manipulated_object:
-                print(
-                    f"🍌 At {robot_state.last_visited_location} and holding {obj.name}. "
-                    f"Episode succeeded in {env.step_number} steps!"
-                )
-                reward += 10.0
-                terminated = True
-                at_banana_location = True
-                info["success"] = True
-                break
+    at_banana_location = is_at_banana_location(env)
+    if is_holding_banana(env):
+        reward += 10.0
+        terminated = True
+        at_banana_location = True
+        info["success"] = True
 
     # Reward shaping: Penalty if the robot is not at a location containing a banana.
     if not terminated and not at_banana_location:

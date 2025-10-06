@@ -10,13 +10,13 @@ from pyrobosim_msgs.srv import (
     ResetWorld,
     SetLocationState,
 )
+import random
 
 
 class PyRoboSimRosEnv(gym.Env):
     """Gym environment wrapping around the PyRoboSim ROS Interface."""
 
     sub_types = Enum("sub_types", "DEFINE_IN_SUBCLASS")
-    world_file_path = "DEFINE_IN_SUBCLASS"
 
     def __init__(
         self,
@@ -101,4 +101,15 @@ class PyRoboSimRosEnv(gym.Env):
     def reset(self, seed=None, options=None):
         """Resets the environment with a specified seed and options."""
         print(f"Resetting environment {seed=}")
+        if seed is None:
+            seed = random.randint(0, 2**31 - 1)
+            print(f"Seed was None, randomly generated {seed=}")
         super().reset(seed=seed)
+        req = ResetWorld.Request()
+        req.seed = seed
+        future = self.reset_world_client.call_async(req)
+        rclpy.spin_until_future_complete(self.node, future)
+
+    def eval(self):
+        """Return values of custom metrics for evaluation."""
+        return {}
