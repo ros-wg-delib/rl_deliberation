@@ -2,13 +2,13 @@
 
 training:
   # General training algorithms
-  max_training_steps: 100
-  reward_threshold: 10.00  # Mean reward to terminate training
+  max_training_steps: 5000
+  reward_threshold: 7.5  # Mean reward to terminate training
 
   # Evaluations during training
   eval:
-    n_eval_episodes: 2
-    eval_freq: 32
+    n_eval_episodes: 5
+    eval_freq: 500
 
   # Individual algorithm options
   DQN:
@@ -18,38 +18,38 @@ training:
     exploration_fraction: 0.25
     learning_starts: 10
     learning_rate: 0.001
-    batch_size: 2
-    train_freq: 1  # steps
+    batch_size: 8
+    train_freq: 4  # steps
     target_update_interval: 1
     policy_kwargs:
       activation_fn: torch.nn.ReLU
-      net_arch": [8, 4]
+      net_arch: [16, 8]
 
   PPO:
     gamma: 0.99
     learning_rate: 0.0003
-    batch_size: 2
-    n_steps: 2
+    batch_size: 8
+    n_steps: 4
     policy_kwargs:
       activation_fn: torch.nn.ReLU
-      pi: [8, 4]  # actor size
-      vf: [8, 4]  # critic size
+      pi: [16, 8]  # actor size
+      vf: [16, 8]  # critic size
 
   SAC:
     gamma: 0.99
     learning_rate: 0.0003
-    batch_size: 2
+    batch_size: 8
     train_freq: 4  # steps
     target_update_interval: 50
     policy_kwargs:
       activation_fn: torch.nn.ReLU
-      pi: [8, 4]  # actor size
-      qf: [8, 4]  # critic size (SAC uses qf, not vf)
+      pi: [16, 8]  # actor size
+      qf: [16, 8]  # critic size (SAC uses qf, not vf)
 
   A2C:
     gamma: 0.99
     learning_rate: 0.0007
     policy_kwargs:
       activation_fn: torch.nn.ReLU
-      pi: [8, 4]  # actor size
-      vf: [8, 4]  # critic size
+      pi: [16, 8]  # actor size
+      vf: [16, 8]  # critic size

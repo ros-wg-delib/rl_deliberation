@@ -166,6 +166,7 @@ class BananaEnv(PyRoboSimRosEnv):
 
             valid_reset = self.reset_validation_fn()
             num_reset_attempts += 1
+            seed = None  # subsequent resets need to not use a fixed seed
 
         print(f"Reset environment in {num_reset_attempts} attempt(s).")
         return observation, info

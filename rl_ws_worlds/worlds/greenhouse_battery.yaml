@@ -21,7 +21,7 @@ robots:
       grid_inflation_radius: 0.1
     action_execution_options:
       close:
-        battery_usage: 20
+        battery_usage: 49  # 2 close actions per charge
 
 rooms:
   - name: hall
@@ -108,6 +108,15 @@ locations:
         position:
           x: 2
           y: -2
+
+    - name: charger
+      category: charger
+      parent: hall
+      pose:
+        position:
+          x: 1.0
+          y: -2.8
+      is_charger: True
 
 objects:
   - name: plant0

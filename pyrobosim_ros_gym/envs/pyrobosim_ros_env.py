@@ -100,15 +100,13 @@ class PyRoboSimRosEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         """Resets the environment with a specified seed and options."""
-        print(f"Resetting environment {seed=}")
         if seed is None:
             seed = random.randint(0, 2**31 - 1)
-            print(f"Seed was None, randomly generated {seed=}")
+            print(f"Resetting environment with randomly generated {seed=}")
+        else:
+            print(f"Resetting environment with fixed {seed=}")
+
         super().reset(seed=seed)
-        req = ResetWorld.Request()
-        req.seed = seed
-        future = self.reset_world_client.call_async(req)
-        rclpy.spin_until_future_complete(self.node, future)
 
     def eval(self):
         """Return values of custom metrics for evaluation."""
