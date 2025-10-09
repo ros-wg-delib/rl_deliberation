@@ -126,7 +126,8 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         truncated = self.step_number >= self.max_steps_per_episode
         if truncated:
             print(
-                f"Maximum steps ({self.max_steps_per_episode}) exceeded. Truncated episode."
+                f"Maximum steps ({self.max_steps_per_episode}) exceeded ."
+                f"Truncated episode with watered fraction {self.watered_plant_fraction()}."
             )
         self.previous_battery_level = self.battery_level()
 
@@ -139,13 +140,13 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         elif action == 2:  # charge
             self.go_to_charger()
 
+        self.step_number += 1
         reward, terminated = self._calculate_reward(action)
         # print(f"{reward=}")
 
         if not terminated:
             self.go_to_next_wp()
             # action_result = result_future.result().result
-            self.step_number += 1
 
         observation = self._get_obs()  # update self.world_state
         # print(f"{observation=}")
@@ -182,7 +183,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                 f"with watered fraction {self.watered_plant_fraction()}."
             )
             self.is_dead = True
-            return -5.0, True
+            return -10.0, True
 
         if action == 0:  # stay ducked
             return 0.0, False
@@ -202,9 +203,8 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                         f"Terminated in {self.step_number} steps "
                         f"with watered fraction {self.watered_plant_fraction()}."
                     )
-                    reward += -10
-                    terminated = True
                     self.is_dead = True
+                    return -10.0, True
                 else:
                     raise RuntimeError(f"Unknown category {plant.category}")
             if reward == 0.0:  # nothing watered, wasted water
@@ -218,12 +218,11 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             reward -= 0.5
 
         # print(f"{self.watered=}")
-        if all(self.watered.values()):
+        terminated = all(self.watered.values())
+        if terminated:
             print(
                 "💧 Watered all good plants! " f"Succeeded in {self.step_number} steps."
             )
-            terminated = True
-
         return reward, terminated
 
     def dead(self):
