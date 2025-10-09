@@ -136,6 +136,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         else:
             action = np.argmax(action)
 
+        # Execute the current actions before calculating reward
         if action == 1:  # water a plant
             self.mark_table(self.get_current_location())
         elif action == 2:  # charge
@@ -149,9 +150,12 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         reward, terminated = self._calculate_reward(action)
         # print(f"{reward=}")
 
+        # Execute the remainder of the actions after calculating reward
         if not terminated:
-            self.go_to_next_wp()
-            # action_result = result_future.result().result
+            if action == 2:
+                self.go_to_current_wp()
+            else:
+                self.go_to_next_wp()
 
         observation = self._get_obs()  # update self.world_state
         # print(f"{observation=}")
@@ -235,7 +239,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                 reward += 1.0
             else:
                 # print(f"\tCharged when battery high ({self.battery_level()}) :(")
-                reward -= 0.5
+                reward -= 1.0
 
         # print(f"{self.watered=}")
         terminated = all(self.watered.values())
@@ -356,6 +360,18 @@ class GreenhouseEnv(PyRoboSimRosEnv):
     def go_to_next_wp(self):
         nav_goal = ExecuteTaskAction.Goal()
         nav_goal.action = self.get_next_navigation_action()
+        nav_goal.action.robot = "robot"
+        nav_goal.realtime_factor = 1.0 if self.realtime else -1.0
+
+        goal_future = self.execute_action_client.send_goal_async(nav_goal)
+        rclpy.spin_until_future_complete(self.node, goal_future)
+
+        result_future = goal_future.result().get_result_async()
+        rclpy.spin_until_future_complete(self.node, result_future)
+
+    def go_to_current_wp(self):
+        nav_goal = ExecuteTaskAction.Goal()
+        nav_goal.action = self.get_current_navigation_action()
         nav_goal.action.robot = "robot"
         nav_goal.realtime_factor = 1.0 if self.realtime else -1.0
 
