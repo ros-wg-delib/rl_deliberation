@@ -54,7 +54,7 @@ if __name__ == "__main__":
     env = get_env_by_name(
         env_type,
         node,
-        max_steps_per_episode=10,
+        max_steps_per_episode=15,
         realtime=True,
         discrete_actions=args.discrete_actions,
     )

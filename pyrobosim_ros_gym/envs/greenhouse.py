@@ -102,7 +102,6 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             "table_nw",
             "table_n",
         ]
-        self.previous_battery_level = 100.0
 
     def _action_space(self):
         if self.sub_type in (
@@ -129,12 +128,14 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                 f"Maximum steps ({self.max_steps_per_episode}) exceeded. "
                 f"Truncated episode with watered fraction {self.watered_plant_fraction()}."
             )
-        self.previous_battery_level = self.battery_level()
 
         # print(f"{'*'*10}")
         # print(f"{action=}")
-        if not self.discrete_actions:
+        if self.discrete_actions:
+            action = float(action)
+        else:
             action = np.argmax(action)
+
         if action == 1:  # water a plant
             self.mark_table(self.get_current_location())
         elif action == 2:  # charge
@@ -176,7 +177,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         close_radius = 1.0
         self.is_dead = False
 
-        if self.previous_battery_level <= 0.0:
+        if self.battery_level() <= 0.0:
             print(
                 "🪫 Ran out of battery. "
                 f"Terminated in {self.step_number} steps "
@@ -186,7 +187,18 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             return -5.0, True
 
         if action == 0:  # stay ducked
-            return 0.0, False
+            # Robot gets a penalty if it decides to ignore a waterable plant.
+            robot_location = self.world_state.robots[0].last_visited_location
+            for plant in self.world_state.objects:
+                if (plant.category == "plant_good") and (
+                    plant.parent == robot_location
+                ):
+                    for location in self.world_state.locations:
+                        if robot_location in location.spawns and location.is_open:
+                            # print("\tPassed over a waterable plant")
+                            reward -= 0.25
+                            break
+            return reward, False
 
         # move up to water
         elif action == 1:
@@ -208,22 +220,23 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                 else:
                     raise RuntimeError(f"Unknown category {plant.category}")
             if reward == 0.0:  # nothing watered, wasted water
+                # print("\tWasted water")
                 reward = -0.5
 
         # Reward shaping to get the robot to visit the charger when battery is low,
         # but not when it is high.
         if action == 2:
-            if self.previous_battery_level < 5.0:
+            if self.battery_level() < 5.0:
+                # print("\tCharged when battery low :)")
                 reward += 1.0
             else:
+                # print(f"\tCharged when battery high ({self.battery_level()}) :(")
                 reward -= 0.5
 
         # print(f"{self.watered=}")
         terminated = all(self.watered.values())
         if terminated:
             print(f"💧 Watered all good plants! Succeeded in {self.step_number} steps.")
-        else:
-            reward -= 0.05  # penalty to help finish episodes more quickly
 
         return reward, terminated
 
@@ -284,7 +297,6 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         self.step_number = 0
         self.waypoint_i = -1
         self.watered = {plant: False for plant in self.good_plants}
-        self.previous_battery_level = self.battery_level()
         self.go_to_next_wp()
 
         print(f"Reset environment in {num_reset_attempts} attempt(s).")
@@ -309,9 +321,9 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             n_observations += 1
 
         obs[-2] = self.battery_level() / 100.0
-        obs[-1] = -1.0
-        cur_loc = self.world_state.robots[0].last_visited_location
-        for loc in self.world_state.locations:
+        obs[-1] = 0.0
+        cur_loc = world_state.robots[0].last_visited_location
+        for loc in world_state.locations:
             if cur_loc == loc.name or cur_loc in loc.spawns:
                 if not loc.is_open:
                     obs[-1] = 1.0  # closed = watered

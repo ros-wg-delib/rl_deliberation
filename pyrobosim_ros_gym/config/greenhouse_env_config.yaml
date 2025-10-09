@@ -18,7 +18,7 @@ training:
     exploration_fraction: 0.25
     learning_starts: 10
     learning_rate: 0.001
-    batch_size: 16
+    batch_size: 8
     train_freq: 4  # steps
     target_update_interval: 1
     policy_kwargs:
@@ -28,8 +28,8 @@ training:
   PPO:
     gamma: 0.99
     learning_rate: 0.0003
-    batch_size: 16
-    n_steps: 16
+    batch_size: 8
+    n_steps: 8
     policy_kwargs:
       activation_fn: torch.nn.ReLU
       pi: [16, 8]  # actor size
@@ -38,7 +38,7 @@ training:
   SAC:
     gamma: 0.99
     learning_rate: 0.0003
-    batch_size: 16
+    batch_size: 8
     train_freq: 4  # steps
     target_update_interval: 50
     policy_kwargs:
