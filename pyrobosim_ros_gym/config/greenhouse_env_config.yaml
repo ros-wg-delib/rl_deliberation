@@ -2,8 +2,9 @@
 
 training:
   # General training algorithms
-  max_training_steps: 5000
+  max_training_steps: 10000
   reward_threshold: 7.5  # Mean reward to terminate training
+                         # (4 watered plants with no error = 8 cumulative reward)
 
   # Evaluations during training
   eval:

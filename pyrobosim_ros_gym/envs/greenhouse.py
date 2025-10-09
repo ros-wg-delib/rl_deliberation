@@ -128,6 +128,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             print(
                 f"Maximum steps ({self.max_steps_per_episode}) exceeded. Truncated episode."
             )
+        self.previous_battery_level = self.battery_level()
 
         # print(f"{'*'*10}")
         # print(f"{action=}")
@@ -174,8 +175,12 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         close_radius = 1.0
         self.is_dead = False
 
-        if self.battery_level() <= 0.0:
-            print("🪫 Tried to act but out of battery. Terminated.")
+        if self.previous_battery_level <= 0.0:
+            print(
+                "🪫 Ran out of battery. "
+                f"Terminated in {self.step_number} steps "
+                f"with watered percent {self.watered_plant_percent()}."
+            )
             self.is_dead = True
             return -5.0, True
 
@@ -192,7 +197,11 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                         self.watered[plant.name] = True
                         reward += 2
                 elif plant.category == "plant_evil":
-                    print("🌶️ Tried to water an evil plant. Terminated.")
+                    print(
+                        "🌶️ Tried to water an evil plant. "
+                        f"Terminated in {self.step_number} steps "
+                        f"with watered percent {self.watered_plant_percent()}."
+                    )
                     reward += -10
                     terminated = True
                     self.is_dead = True
@@ -203,14 +212,16 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
         # Reward shaping to get the robot to visit the charger when battery is low,
         # but not when it is high.
-        if (self.battery_level() < 5.0) and (action != 2):
+        if (self.previous_battery_level < 5.0) and (action != 2):
             reward -= 0.5
-        elif (self.battery_level() >= 50.0) and (action == 2):
+        elif (self.previous_battery_level >= 50.0) and (action == 2):
             reward -= 0.5
 
         # print(f"{self.watered=}")
         if all(self.watered.values()):
-            print("💧 Watered all good plants!")
+            print(
+                "💧 Watered all good plants! " f"Succeeded in {self.step_number} steps."
+            )
             terminated = True
 
         return reward, terminated
@@ -272,6 +283,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         self.step_number = 0
         self.waypoint_i = -1
         self.watered = {plant: False for plant in self.good_plants}
+        self.previous_battery_level = self.battery_level()
         self.go_to_next_wp()
 
         print(f"Reset environment in {num_reset_attempts} attempt(s).")
