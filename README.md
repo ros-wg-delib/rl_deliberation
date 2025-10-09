@@ -106,7 +106,7 @@ obs=array([1.        , 0.99194384, 0.        , 2.7288349, 0.        , 3.3768525,
 action=array(0)
 Maximum steps (10) exceeded. Truncated episode.
 reward=0.0
-custom_metrics={'watered_plant_percent': 0.0, 'battery_level': 100.0}
+custom_metrics={'watered_plant_fraction': 0.0, 'battery_level': 100.0}
 terminated=False
 truncated=False
 ..........
@@ -118,7 +118,7 @@ This is one step of the environment and the agent's interaction with it.
 - `action` is the action taken by the agent. In this simple example, it can choose between 0 = move on and 1 = water plant.
 - `reward` is the reward received after taking the action, which is `0.0` in this case, because the agent did not water any plant.
 - `custom_metrics` provides additional information about the episode:
-  - `watered_plant_percent` indicates the percentage of plants watered thus far in the episode.
+  - `watered_plant_fraction` indicates the fraction of plants (between 0 and 1) watered thus far in the episode.
   - `battery_level` indicates the current battery level of the robot. (This will not decrease for this environment type, but it will later.)
 - `terminated` indicates whether the episode reached a terminal state (e.g., the task was completed or failed).
 - `truncated` indicates whether the episode ended due to a time limit.
@@ -131,7 +131,7 @@ At the end of the episode, and after all episodes are completed, you will see so
 ..........
 <<< Episode 1 finished.
 Total reward: 0.0
-Mean watered_plant_percent: 0.0
+Mean watered_plant_fraction: 0.0
 Mean battery_level: 100.0
 ====================
 Summary:
@@ -139,7 +139,7 @@ Reward over 1 episodes:
  Mean: 0.0
  Min: 0.0
  Max: 0.0
-Custom metric 'watered_plant_percent' over 1 episodes:
+Custom metric 'watered_plant_fraction' over 1 episodes:
  Mean: 0.0
  Min: 0.0
  Max: 0.0

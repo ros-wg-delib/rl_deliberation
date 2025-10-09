@@ -179,7 +179,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             print(
                 "🪫 Ran out of battery. "
                 f"Terminated in {self.step_number} steps "
-                f"with watered percent {self.watered_plant_percent()}."
+                f"with watered fraction {self.watered_plant_fraction()}."
             )
             self.is_dead = True
             return -5.0, True
@@ -200,7 +200,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                     print(
                         "🌶️ Tried to water an evil plant. "
                         f"Terminated in {self.step_number} steps "
-                        f"with watered percent {self.watered_plant_percent()}."
+                        f"with watered fraction {self.watered_plant_fraction()}."
                     )
                     reward += -10
                     terminated = True
@@ -229,7 +229,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
     def dead(self):
         return self.is_dead
 
-    def watered_plant_percent(self):
+    def watered_plant_fraction(self):
         n_watered = 0
         for w in self.watered.values():
             if w:
@@ -313,9 +313,8 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
     def eval(self):
         """Return values of custom metrics for evaluation."""
-        print("eval ...")
         return {
-            "watered_plant_percent": float(self.watered_plant_percent()),
+            "watered_plant_fraction": float(self.watered_plant_fraction()),
             "battery_level": float(self.battery_level()),
         }
 
