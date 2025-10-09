@@ -8,7 +8,7 @@ from pyrobosim_msgs.msg import TaskAction, WorldState
 
 from .pyrobosim_ros_env import PyRoboSimRosEnv
 from pyrobosim_msgs.action import ExecuteTaskAction
-from pyrobosim_msgs.msg import ExecutionResult, TaskAction, WorldState
+from pyrobosim_msgs.msg import TaskAction, WorldState
 from pyrobosim_msgs.srv import RequestWorldState, ResetWorld
 
 

@@ -9,14 +9,15 @@
 """Evaluates a trained RL policy."""
 
 import argparse
+import os
 from typing import Dict, List
+
 import rclpy
 from rclpy.node import Node
 from stable_baselines3 import DQN, PPO, SAC, A2C
 from stable_baselines3.common.base_class import BaseAlgorithm
 
-from pyrobosim_ros_gym.envs import get_env_by_name, BananaEnv, GreenhouseEnv
-import os
+from pyrobosim_ros_gym.envs import get_env_by_name
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
