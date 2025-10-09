@@ -2,7 +2,7 @@
 
 training:
   # General training algorithms
-  max_training_steps: 25000
+  max_training_steps: 10000
   reward_threshold: 7.5  # Mean reward to terminate training
 
   # Evaluations during training

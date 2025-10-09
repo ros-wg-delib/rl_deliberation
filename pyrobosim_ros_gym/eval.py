@@ -12,6 +12,7 @@ import argparse
 import os
 from typing import Dict, List
 
+from gymnasium.spaces import Discrete
 import rclpy
 from rclpy.node import Node
 from stable_baselines3 import DQN, PPO, SAC, A2C
@@ -23,11 +24,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model", required=True, help="The name of the model to evaluate."
-    )
-    parser.add_argument(
-        "--discrete-actions",
-        action="store_true",
-        help="If true, uses discrete action space. Otherwise, uses continuous action space.",
     )
     parser.add_argument(
         "--num-episodes",
@@ -47,19 +43,6 @@ if __name__ == "__main__":
     env_type = model_name_parts[0]
     model_type = model_name_parts[1]
 
-    # Create the environment
-    rclpy.init()
-    node = Node("pyrobosim_ros_env")
-
-    env = get_env_by_name(
-        env_type,
-        node,
-        max_steps_per_episode=15,
-        realtime=True,
-        discrete_actions=args.discrete_actions,
-    )
-    env.reset()
-
     # Load a model
     if model_type == "DQN":
         model: BaseAlgorithm = DQN.load(args.model, env=None)
@@ -71,6 +54,18 @@ if __name__ == "__main__":
         model = A2C.load(args.model, env=None)
     else:
         raise RuntimeError(f"Invalid model type: {model_type}")
+
+    # Create the environment
+    rclpy.init()
+    node = Node("pyrobosim_ros_env")
+
+    env = get_env_by_name(
+        env_type,
+        node,
+        max_steps_per_episode=15,
+        realtime=True,
+        discrete_actions=isinstance(model.action_space, Discrete),
+    )
 
     # Evaluate it for some steps
     reward_per_episode = [0.0 for _ in range(args.num_episodes)]

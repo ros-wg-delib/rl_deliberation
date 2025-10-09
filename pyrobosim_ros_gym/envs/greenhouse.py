@@ -141,6 +141,10 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         elif action == 2:  # charge
             self.go_to_charger()
 
+        future = self.request_state_client.call_async(RequestWorldState.Request())
+        rclpy.spin_until_future_complete(self.node, future)
+        self.world_state = future.result().state
+
         self.step_number += 1
         reward, terminated = self._calculate_reward(action)
         # print(f"{reward=}")
