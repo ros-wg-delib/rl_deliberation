@@ -2,9 +2,8 @@
 
 training:
   # General training algorithms
-  max_training_steps: 10000
+  max_training_steps: 25000
   reward_threshold: 7.5  # Mean reward to terminate training
-                         # (4 watered plants with no error = 8 cumulative reward)
 
   # Evaluations during training
   eval:
@@ -19,7 +18,7 @@ training:
     exploration_fraction: 0.25
     learning_starts: 10
     learning_rate: 0.001
-    batch_size: 8
+    batch_size: 16
     train_freq: 4  # steps
     target_update_interval: 1
     policy_kwargs:
@@ -29,8 +28,8 @@ training:
   PPO:
     gamma: 0.99
     learning_rate: 0.0003
-    batch_size: 8
-    n_steps: 4
+    batch_size: 16
+    n_steps: 16
     policy_kwargs:
       activation_fn: torch.nn.ReLU
       pi: [16, 8]  # actor size
@@ -39,7 +38,7 @@ training:
   SAC:
     gamma: 0.99
     learning_rate: 0.0003
-    batch_size: 8
+    batch_size: 16
     train_freq: 4  # steps
     target_update_interval: 50
     policy_kwargs:

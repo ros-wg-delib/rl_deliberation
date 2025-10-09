@@ -114,7 +114,7 @@ truncated=False
 
 This is one step of the environment and the agent's interaction with it.
 
-- `obs` is the observation from the environment. It is an array with information about the 3 closest plant objects, with a class label (0 or 1), and the distance to each object, plus the battery level at the end.
+- `obs` is the observation from the environment. It is an array with information about the 3 closest plant objects, with a class label (0 or 1), the distance to each object. It also has the robot's battery level and whether its current location is watered at the end.
 - `action` is the action taken by the agent. In this simple example, it can choose between 0 = move on and 1 = water plant.
 - `reward` is the reward received after taking the action, which is `0.0` in this case, because the agent did not water any plant.
 - `custom_metrics` provides additional information about the episode:

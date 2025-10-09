@@ -75,12 +75,12 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         self.max_n_objects = 3
         self.max_dist = 10
         # array of n objects with a class and distance each, plus battery level
-        self.obs_size = 2 * self.max_n_objects + 1
+        self.obs_size = 2 * self.max_n_objects + 2
         low = -1.0 * np.ones(self.obs_size, dtype=np.float32)
-        low[-1] = 0.0
-        high = 2.0 * np.ones(self.obs_size, dtype=np.float32)  # max class = 2
+        low[-2:] = 0.0
+        high = np.ones(self.obs_size, dtype=np.float32)  # max class = 1
         high[1::2] = self.max_dist
-        high[-1] = 1.0
+        high[-2:] = 1.0
         self.observation_space = spaces.Box(low=low, high=high)
         print(f"{self.observation_space=}")
 
@@ -126,7 +126,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         truncated = self.step_number >= self.max_steps_per_episode
         if truncated:
             print(
-                f"Maximum steps ({self.max_steps_per_episode}) exceeded ."
+                f"Maximum steps ({self.max_steps_per_episode}) exceeded. "
                 f"Truncated episode with watered fraction {self.watered_plant_fraction()}."
             )
         self.previous_battery_level = self.battery_level()
@@ -183,7 +183,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                 f"with watered fraction {self.watered_plant_fraction()}."
             )
             self.is_dead = True
-            return -10.0, True
+            return -5.0, True
 
         if action == 0:  # stay ducked
             return 0.0, False
@@ -196,7 +196,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                 if plant.category == "plant_good":
                     if not self.watered[plant.name]:
                         self.watered[plant.name] = True
-                        reward += 2
+                        reward += 2.0
                 elif plant.category == "plant_evil":
                     print(
                         "🌶️ Tried to water an evil plant. "
@@ -204,7 +204,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                         f"with watered fraction {self.watered_plant_fraction()}."
                     )
                     self.is_dead = True
-                    return -10.0, True
+                    return -5.0, True
                 else:
                     raise RuntimeError(f"Unknown category {plant.category}")
             if reward == 0.0:  # nothing watered, wasted water
@@ -212,17 +212,19 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
         # Reward shaping to get the robot to visit the charger when battery is low,
         # but not when it is high.
-        if (self.previous_battery_level < 5.0) and (action != 2):
-            reward -= 0.5
-        elif (self.previous_battery_level >= 50.0) and (action == 2):
-            reward -= 0.5
+        if action == 2:
+            if self.previous_battery_level < 5.0:
+                reward += 1.0
+            else:
+                reward -= 0.5
 
         # print(f"{self.watered=}")
         terminated = all(self.watered.values())
         if terminated:
-            print(
-                "💧 Watered all good plants! " f"Succeeded in {self.step_number} steps."
-            )
+            print(f"💧 Watered all good plants! Succeeded in {self.step_number} steps.")
+        else:
+            reward -= 0.05  # penalty to help finish episodes more quickly
+
         return reward, terminated
 
     def dead(self):
@@ -305,7 +307,15 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             obs[2 * n_observations] = plant_class
             obs[2 * n_observations + 1] = closest_d
             n_observations += 1
-        obs[-1] = self.battery_level() / 100.0
+
+        obs[-2] = self.battery_level() / 100.0
+        obs[-1] = -1.0
+        cur_loc = self.world_state.robots[0].last_visited_location
+        for loc in self.world_state.locations:
+            if cur_loc == loc.name or cur_loc in loc.spawns:
+                if not loc.is_open:
+                    obs[-1] = 1.0  # closed = watered
+                    break
 
         self.world_state = world_state
         return obs
