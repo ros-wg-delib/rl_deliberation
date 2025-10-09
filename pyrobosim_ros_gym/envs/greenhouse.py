@@ -74,7 +74,8 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         # Observation space is defined by:
         self.max_n_objects = 3
         self.max_dist = 10
-        # array of n objects with a class and distance each, plus battery level
+        # array of n objects with a class and distance each,
+        # plus battery level and current location watered.
         self.obs_size = 2 * self.max_n_objects + 2
         low = -1.0 * np.ones(self.obs_size, dtype=np.float32)
         low[-2:] = 0.0
@@ -104,13 +105,10 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         ]
 
     def _action_space(self):
-        if self.sub_type in (
-            GreenhouseEnv.sub_types.Plain,
-            GreenhouseEnv.sub_types.Random,
-        ):
-            self.num_actions = 2  # stay ducked or water plant
-        else:
+        if self.sub_type == GreenhouseEnv.sub_types.Battery:
             self.num_actions = 3  # stay ducked, water plant, or go charge
+        else:
+            self.num_actions = 2  # stay ducked or water plant
 
         if self.discrete_actions:
             return spaces.Discrete(self.num_actions)
@@ -140,7 +138,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         if action == 1:  # water a plant
             self.mark_table(self.get_current_location())
         elif action == 2:  # charge
-            self.go_to_charger()
+            self.go_to_loc("charger")
 
         future = self.request_state_client.call_async(RequestWorldState.Request())
         rclpy.spin_until_future_complete(self.node, future)
@@ -152,13 +150,21 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
         # Execute the remainder of the actions after calculating reward
         if not terminated:
-            if action == 2:
-                self.go_to_current_wp()
+            if action == 2:  # charge
+                self.go_to_loc(self.get_current_location())
             else:
-                self.go_to_next_wp()
+                self.go_to_loc(self.get_next_location())
 
-        observation = self._get_obs()  # update self.world_state
+        # Update self.world_state and observation after finishing the action
+        observation = self._get_obs()
         # print(f"{observation=}")
+
+        info = {
+            "metrics": {
+                "watered_plant_fraction": float(self.watered_plant_fraction()),
+                "battery_level": float(self.battery_level()),
+            }
+        }
 
         return observation, reward, terminated, truncated, info
 
@@ -176,14 +182,12 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         rclpy.spin_until_future_complete(self.node, result_future)
 
     def _calculate_reward(self, action):
-        # Calculate reward
         reward = 0.0
         terminated = False
         plants_by_distance = self._get_plants_by_distance(self.world_state)
         # print(f"{action=}")
 
-        close_radius = 1.0
-        self.is_dead = False
+        robot_location = self.world_state.robots[0].last_visited_location
 
         if self.battery_level() <= 0.0:
             print(
@@ -191,12 +195,10 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                 f"Terminated in {self.step_number} steps "
                 f"with watered fraction {self.watered_plant_fraction()}."
             )
-            self.is_dead = True
             return -5.0, True
 
         if action == 0:  # stay ducked
             # Robot gets a penalty if it decides to ignore a waterable plant.
-            robot_location = self.world_state.robots[0].last_visited_location
             for plant in self.world_state.objects:
                 if (plant.category == "plant_good") and (
                     plant.parent == robot_location
@@ -208,10 +210,9 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                             break
             return reward, False
 
-        # move up to water
-        elif action == 1:
-            for dist, plant in plants_by_distance.items():
-                if dist > close_radius:
+        elif action == 1:  # move up to water
+            for plant in plants_by_distance.values():
+                if plant.parent != robot_location:
                     continue
                 if plant.category == "plant_good":
                     if not self.watered[plant.name]:
@@ -223,7 +224,6 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                         f"Terminated in {self.step_number} steps "
                         f"with watered fraction {self.watered_plant_fraction()}."
                     )
-                    self.is_dead = True
                     return -5.0, True
                 else:
                     raise RuntimeError(f"Unknown category {plant.category}")
@@ -231,9 +231,9 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                 # print("\tWasted water")
                 reward = -0.5
 
-        # Reward shaping to get the robot to visit the charger when battery is low,
-        # but not when it is high.
-        if action == 2:
+        if action == 2:  # charging
+            # Reward shaping to get the robot to visit the charger when its
+            # battery is low, but not when it is high.
             if self.battery_level() < 5.0:
                 # print("\tCharged when battery low :)")
                 reward += 1.0
@@ -248,9 +248,6 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
         return reward, terminated
 
-    def dead(self):
-        return self.is_dead
-
     def watered_plant_fraction(self):
         n_watered = 0
         for w in self.watered.values():
@@ -259,8 +256,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         return n_watered / len(self.watered)
 
     def battery_level(self):
-        robot_state = self.world_state.robots[0]
-        return robot_state.battery_level
+        return self.world_state.robots[0].battery_level
 
     def _get_plants_by_distance(self, world_state: WorldState):
         robot_state = world_state.robots[0]
@@ -305,7 +301,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         self.step_number = 0
         self.waypoint_i = -1
         self.watered = {plant: False for plant in self.good_plants}
-        self.go_to_next_wp()
+        self.go_to_loc(self.get_next_location())
 
         print(f"Reset environment in {num_reset_attempts} attempt(s).")
         return observation, {}
@@ -329,6 +325,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             n_observations += 1
 
         obs[-2] = self.battery_level() / 100.0
+
         obs[-1] = 0.0
         cur_loc = world_state.robots[0].last_visited_location
         for loc in world_state.locations:
@@ -340,50 +337,16 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         self.world_state = world_state
         return obs
 
-    def eval(self):
-        """Return values of custom metrics for evaluation."""
-        return {
-            "watered_plant_fraction": float(self.watered_plant_fraction()),
-            "battery_level": float(self.battery_level()),
-        }
-
-    def get_next_navigation_action(self):
+    def get_next_location(self):
         self.waypoint_i = (self.waypoint_i + 1) % len(self.waypoints)
-        return self.get_current_navigation_action()
-
-    def get_current_navigation_action(self):
-        return TaskAction(type="navigate", target_location=self.get_current_location())
+        return self.get_current_location()
 
     def get_current_location(self):
         return self.waypoints[self.waypoint_i]
 
-    def go_to_next_wp(self):
+    def go_to_loc(self, loc: str):
         nav_goal = ExecuteTaskAction.Goal()
-        nav_goal.action = self.get_next_navigation_action()
-        nav_goal.action.robot = "robot"
-        nav_goal.realtime_factor = 1.0 if self.realtime else -1.0
-
-        goal_future = self.execute_action_client.send_goal_async(nav_goal)
-        rclpy.spin_until_future_complete(self.node, goal_future)
-
-        result_future = goal_future.result().get_result_async()
-        rclpy.spin_until_future_complete(self.node, result_future)
-
-    def go_to_current_wp(self):
-        nav_goal = ExecuteTaskAction.Goal()
-        nav_goal.action = self.get_current_navigation_action()
-        nav_goal.action.robot = "robot"
-        nav_goal.realtime_factor = 1.0 if self.realtime else -1.0
-
-        goal_future = self.execute_action_client.send_goal_async(nav_goal)
-        rclpy.spin_until_future_complete(self.node, goal_future)
-
-        result_future = goal_future.result().get_result_async()
-        rclpy.spin_until_future_complete(self.node, result_future)
-
-    def go_to_charger(self):
-        nav_goal = ExecuteTaskAction.Goal()
-        nav_goal.action = TaskAction(type="navigate", target_location="charger")
+        nav_goal.action = TaskAction(type="navigate", target_location=loc)
         nav_goal.action.robot = "robot"
         nav_goal.realtime_factor = 1.0 if self.realtime else -1.0
 

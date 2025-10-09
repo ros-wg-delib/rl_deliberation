@@ -107,7 +107,3 @@ class PyRoboSimRosEnv(gym.Env):
             print(f"Resetting environment with fixed {seed=}")
 
         super().reset(seed=seed)
-
-    def eval(self):
-        """Return values of custom metrics for evaluation."""
-        return {}

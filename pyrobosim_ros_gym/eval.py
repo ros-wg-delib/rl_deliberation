@@ -83,7 +83,7 @@ if __name__ == "__main__":
             action, _ = model.predict(obs, deterministic=True)
             print(f"{action=}")
             obs, reward, terminated, truncated, info = env.step(action)
-            custom_metrics = env.eval()
+            custom_metrics = info.get("metrics", {})
 
             print(f"{reward=}")
             reward_per_episode[i_e] += reward
