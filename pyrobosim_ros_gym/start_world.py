@@ -9,7 +9,6 @@
 """Loads a world to act as a server for the RL problem."""
 
 import argparse
-import os
 import rclpy
 import threading
 

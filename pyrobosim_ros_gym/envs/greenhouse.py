@@ -7,7 +7,6 @@ from gymnasium import spaces
 from pyrobosim_msgs.msg import TaskAction, WorldState
 
 from .pyrobosim_ros_env import PyRoboSimRosEnv
-from pprint import pprint
 from pyrobosim_msgs.action import ExecuteTaskAction
 from pyrobosim_msgs.msg import TaskAction, WorldState
 from pyrobosim_msgs.srv import RequestWorldState, ResetWorld
@@ -61,11 +60,12 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             pass
         else:
             raise ValueError(f"Invalid environment: {sub_type}")
+        self.sub_type = sub_type
 
         super().__init__(
             node,
-            None,
-            None,
+            None,  # reward_fn
+            None,  # reset_validation_fn
             max_steps_per_episode,
             realtime,
             discrete_actions,
@@ -74,11 +74,15 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         # Observation space is defined by:
         self.max_n_objects = 3
         self.max_dist = 10
-        # array of n objects with a class and distance each
-        self.obs_size = (self.max_n_objects, 2)
-        self.observation_space = spaces.Box(
-            low=-1, high=self.max_dist, shape=self.obs_size
-        )
+        # array of n objects with a class and distance each,
+        # plus battery level and current location watered.
+        self.obs_size = 2 * self.max_n_objects + 2
+        low = -1.0 * np.ones(self.obs_size, dtype=np.float32)
+        low[-2:] = 0.0
+        high = np.ones(self.obs_size, dtype=np.float32)  # max class = 1
+        high[1::2] = self.max_dist
+        high[-2:] = 1.0
+        self.observation_space = spaces.Box(low=low, high=high)
         print(f"{self.observation_space=}")
 
         self.plants = [obj.name for obj in self.world_state.objects]
@@ -101,33 +105,66 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         ]
 
     def _action_space(self):
-        self.num_actions = 2  # stay ducked or water plant
-        return spaces.Discrete(self.num_actions)
+        if self.sub_type == GreenhouseEnv.sub_types.Battery:
+            self.num_actions = 3  # stay ducked, water plant, or go charge
+        else:
+            self.num_actions = 2  # stay ducked or water plant
+
+        if self.discrete_actions:
+            return spaces.Discrete(self.num_actions)
+        else:
+            return spaces.Box(
+                low=np.zeros(self.num_actions, dtype=np.float32),
+                high=np.ones(self.num_actions, dtype=np.float32),
+            )
 
     def step(self, action):
         info = {}
         truncated = self.step_number >= self.max_steps_per_episode
         if truncated:
             print(
-                f"Maximum steps ({self.max_steps_per_episode}) exceeded. Truncated episode."
+                f"Maximum steps ({self.max_steps_per_episode}) exceeded. "
+                f"Truncated episode with watered fraction {self.watered_plant_fraction()}."
             )
 
         # print(f"{'*'*10}")
         # print(f"{action=}")
+        if self.discrete_actions:
+            action = float(action)
+        else:
+            action = np.argmax(action)
 
-        if action:
+        # Execute the current actions before calculating reward
+        if action == 1:  # water a plant
             self.mark_table(self.get_current_location())
+        elif action == 2:  # charge
+            self.go_to_loc("charger")
 
+        future = self.request_state_client.call_async(RequestWorldState.Request())
+        rclpy.spin_until_future_complete(self.node, future)
+        self.world_state = future.result().state
+
+        self.step_number += 1
         reward, terminated = self._calculate_reward(action)
         # print(f"{reward=}")
 
+        # Execute the remainder of the actions after calculating reward
         if not terminated:
-            self.go_to_next_wp()
-            # action_result = result_future.result().result
-            self.step_number += 1
+            if action == 2:  # charge
+                self.go_to_loc(self.get_current_location())
+            else:
+                self.go_to_loc(self.get_next_location())
 
-        observation = self._get_obs()  # update self.world_state
+        # Update self.world_state and observation after finishing the action
+        observation = self._get_obs()
         # print(f"{observation=}")
+
+        info = {
+            "metrics": {
+                "watered_plant_fraction": float(self.watered_plant_fraction()),
+                "battery_level": float(self.battery_level()),
+            }
+        }
 
         return observation, reward, terminated, truncated, info
 
@@ -145,57 +182,81 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         rclpy.spin_until_future_complete(self.node, result_future)
 
     def _calculate_reward(self, action):
-        # Calculate reward
         reward = 0.0
         terminated = False
         plants_by_distance = self._get_plants_by_distance(self.world_state)
         # print(f"{action=}")
 
-        close_radius = 1.0
-        self.is_dead = False
+        robot_location = self.world_state.robots[0].last_visited_location
+
+        if self.battery_level() <= 0.0:
+            print(
+                "🪫 Ran out of battery. "
+                f"Terminated in {self.step_number} steps "
+                f"with watered fraction {self.watered_plant_fraction()}."
+            )
+            return -5.0, True
 
         if action == 0:  # stay ducked
-            return 0.0, False
+            # Robot gets a penalty if it decides to ignore a waterable plant.
+            for plant in self.world_state.objects:
+                if (plant.category == "plant_good") and (
+                    plant.parent == robot_location
+                ):
+                    for location in self.world_state.locations:
+                        if robot_location in location.spawns and location.is_open:
+                            # print("\tPassed over a waterable plant")
+                            reward -= 0.25
+                            break
+            return reward, False
 
-        # move up to water
-        for dist, plant in plants_by_distance.items():
-            if dist > close_radius:
-                continue
-            if plant.category == "plant_good":
-                if not self.watered[plant.name]:
-                    self.watered[plant.name] = True
-                    reward += 2
-            elif plant.category == "plant_evil":
-                reward += -10
-                terminated = True
-                self.is_dead = True
+        elif action == 1:  # move up to water
+            for plant in plants_by_distance.values():
+                if plant.parent != robot_location:
+                    continue
+                if plant.category == "plant_good":
+                    if not self.watered[plant.name]:
+                        self.watered[plant.name] = True
+                        reward += 2.0
+                elif plant.category == "plant_evil":
+                    print(
+                        "🌶️ Tried to water an evil plant. "
+                        f"Terminated in {self.step_number} steps "
+                        f"with watered fraction {self.watered_plant_fraction()}."
+                    )
+                    return -5.0, True
+                else:
+                    raise RuntimeError(f"Unknown category {plant.category}")
+            if reward == 0.0:  # nothing watered, wasted water
+                # print("\tWasted water")
+                reward = -0.5
+
+        if action == 2:  # charging
+            # Reward shaping to get the robot to visit the charger when its
+            # battery is low, but not when it is high.
+            if self.battery_level() < 5.0:
+                # print("\tCharged when battery low :)")
+                reward += 1.0
             else:
-                raise RuntimeError(f"Unknown category {plant.category}")
-        if reward == 0.0:  # nothing watered, wasted water
-            reward = -0.1
+                # print(f"\tCharged when battery high ({self.battery_level()}) :(")
+                reward -= 1.0
 
         # print(f"{self.watered=}")
-        if all(self.watered.values()):
-            terminated = True
-
-        if self.water_tank_level() <= 0:
-            terminated = True
+        terminated = all(self.watered.values())
+        if terminated:
+            print(f"💧 Watered all good plants! Succeeded in {self.step_number} steps.")
 
         return reward, terminated
 
-    def dead(self):
-        return self.is_dead
-
-    def watered_plant_percent(self):
+    def watered_plant_fraction(self):
         n_watered = 0
         for w in self.watered.values():
             if w:
                 n_watered += 1
         return n_watered / len(self.watered)
 
-    def water_tank_level(self):
-        robot_state = self.world_state.robots[0]
-        return robot_state.battery_level
+    def battery_level(self):
+        return self.world_state.robots[0].battery_level
 
     def _get_plants_by_distance(self, world_state: WorldState):
         robot_state = world_state.robots[0]
@@ -212,21 +273,37 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         return plants_by_distance
 
     def reset(self, seed=None, options=None):
-        super().reset(seed=seed)
-        future = self.reset_world_client.call_async(
-            ResetWorld.Request(seed=(seed or -1))
-        )
-        rclpy.spin_until_future_complete(self.node, future)
+        super().reset(seed)
+
+        valid_reset = False
+        num_reset_attempts = 0
+        while not valid_reset:
+            future = self.reset_world_client.call_async(
+                ResetWorld.Request(seed=(seed or -1))
+            )
+            rclpy.spin_until_future_complete(self.node, future)
+
+            # Validate that there are no two plants in the same location.
+            observation = self._get_obs()
+            valid_reset = True
+            parent_locs = set()
+            for obj in self.world_state.objects:
+                if obj.parent not in parent_locs:
+                    parent_locs.add(obj.parent)
+                else:
+                    valid_reset = False
+                    break
+
+            num_reset_attempts += 1
+            seed = None  # subsequent resets need to not use a fixed seed
 
         # Reset helper vars
         self.step_number = 0
         self.waypoint_i = -1
         self.watered = {plant: False for plant in self.good_plants}
-        self.go_to_next_wp()
+        self.go_to_loc(self.get_next_location())
 
-        # Very first observation
-        observation = self._get_obs()
-
+        print(f"Reset environment in {num_reset_attempts} attempt(s).")
         return observation, {}
 
     def _get_obs(self):
@@ -237,39 +314,39 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         plants_by_distance = self._get_plants_by_distance(world_state)
 
         obs = np.zeros(self.obs_size, dtype=np.float32)
-        obs[:, 0] = -1  # unknown class
+        obs[:] = -1  # unknown class
         n_observations = 0
         while n_observations < self.max_n_objects:
             closest_d = min(plants_by_distance.keys())
             plant = plants_by_distance.pop(closest_d)
             plant_class = 0 if plant.category == "plant_good" else 1
-            obs[n_observations] = [plant_class, closest_d]
+            obs[2 * n_observations] = plant_class
+            obs[2 * n_observations + 1] = closest_d
             n_observations += 1
+
+        obs[-2] = self.battery_level() / 100.0
+
+        obs[-1] = 0.0
+        cur_loc = world_state.robots[0].last_visited_location
+        for loc in world_state.locations:
+            if cur_loc == loc.name or cur_loc in loc.spawns:
+                if not loc.is_open:
+                    obs[-1] = 1.0  # closed = watered
+                    break
 
         self.world_state = world_state
         return obs
 
-    def eval(self):
-        """Return values of custom metrics for evaluation."""
-        print("eval ...")
-        return {
-            "watered_plant_percent": float(self.watered_plant_percent()),
-            "water_tank_level": float(self.water_tank_level()),
-        }
-
-    def get_next_navigation_action(self):
+    def get_next_location(self):
         self.waypoint_i = (self.waypoint_i + 1) % len(self.waypoints)
-        return self.get_current_navigation_action()
-
-    def get_current_navigation_action(self):
-        return TaskAction(type="navigate", target_location=self.get_current_location())
+        return self.get_current_location()
 
     def get_current_location(self):
         return self.waypoints[self.waypoint_i]
 
-    def go_to_next_wp(self):
+    def go_to_loc(self, loc: str):
         nav_goal = ExecuteTaskAction.Goal()
-        nav_goal.action = self.get_next_navigation_action()
+        nav_goal.action = TaskAction(type="navigate", target_location=loc)
         nav_goal.action.robot = "robot"
         nav_goal.realtime_factor = 1.0 if self.realtime else -1.0
 

@@ -24,7 +24,7 @@ training:
     target_update_interval: 500
     policy_kwargs:
       activation_fn: torch.nn.ReLU
-      net_arch": [64, 64]
+      net_arch: [64, 64]
 
   PPO:
     gamma: 0.99

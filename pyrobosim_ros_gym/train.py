@@ -22,7 +22,6 @@ from stable_baselines3.common.callbacks import (
     StopTrainingOnRewardThreshold,
 )
 from stable_baselines3.common.base_class import BaseAlgorithm
-from stable_baselines3.common.callbacks import BaseCallback
 import yaml
 
 from pyrobosim_ros_gym.envs import get_env_by_name, available_envs_w_subtype
