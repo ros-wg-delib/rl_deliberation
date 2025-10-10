@@ -9,16 +9,15 @@
 """Evaluates a trained RL policy."""
 
 import argparse
-import os
 from typing import Dict, List
 
 from gymnasium.spaces import Discrete
 import rclpy
 from rclpy.node import Node
-from stable_baselines3 import DQN, PPO, SAC, A2C
-from stable_baselines3.common.base_class import BaseAlgorithm
 
 from pyrobosim_ros_gym.envs import get_env_by_name
+from pyrobosim_ros_gym.policies import model_and_env_type_from_path
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -34,31 +33,11 @@ if __name__ == "__main__":
     parser.add_argument("--seed", default=42, type=int, help="The RNG seed to use.")
     args = parser.parse_args()
 
-    assert os.path.isfile(args.model), f"Model {args.model} must be a valid file."
-    model_fname = os.path.basename(args.model)
-    model_name_parts = model_fname.split("_")
-    assert (
-        len(model_name_parts) >= 2
-    ), f"Model name {model_fname} must be of the form <env>_<model>[_<otherinfo>].pt"
-    env_type = model_name_parts[0]
-    model_type = model_name_parts[1]
-
-    # Load a model
-    if model_type == "DQN":
-        model: BaseAlgorithm = DQN.load(args.model, env=None)
-    elif model_type == "PPO":
-        model = PPO.load(args.model, env=None)
-    elif model_type == "SAC":
-        model = SAC.load(args.model, env=None)
-    elif model_type == "A2C":
-        model = A2C.load(args.model, env=None)
-    else:
-        raise RuntimeError(f"Invalid model type: {model_type}")
-
-    # Create the environment
     rclpy.init()
     node = Node("pyrobosim_ros_env")
 
+    # Load the model and environment
+    model, env_type = model_and_env_type_from_path(args.model)
     env = get_env_by_name(
         env_type,
         node,
@@ -67,7 +46,8 @@ if __name__ == "__main__":
         discrete_actions=isinstance(model.action_space, Discrete),
     )
 
-    # Evaluate it for some steps
+    # Evaluate the model for some steps
+    num_successful_episodes = 0
     reward_per_episode = [0.0 for _ in range(args.num_episodes)]
     custom_metrics_store: Dict[str, List[float]] = {}
     custom_metrics_episode_mean: Dict[str, float] = {}
@@ -98,7 +78,10 @@ if __name__ == "__main__":
             print(f"{truncated=}")
             print("." * 10)
             if terminated or truncated:
-                print(f"<<< Episode {i_e+1} finished.")
+                success = info["success"]
+                if success:
+                    num_successful_episodes += 1
+                print(f"<<< Episode {i_e+1} finished with {success=}.")
                 print(f"Total reward: {reward_per_episode[i_e]}")
                 for k, v in custom_metrics_store.items():
                     mean_metric = sum(v) / len(v) if len(v) > 0 else 0.0
@@ -111,6 +94,11 @@ if __name__ == "__main__":
                 break
 
     print("Summary:")
+    success_percent = 100.0 * num_successful_episodes / args.num_episodes
+    print(
+        f"Successful episodes: {num_successful_episodes} / {args.num_episodes} "
+        f"({success_percent:.2f}%)"
+    )
     print(f"Reward over {args.num_episodes} episodes:")
     print(f" Mean: {sum(reward_per_episode)/args.num_episodes}")
     print(f" Min: {min(reward_per_episode)}")

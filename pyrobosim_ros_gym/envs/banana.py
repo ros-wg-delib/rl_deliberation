@@ -3,9 +3,10 @@
 from pprint import pprint
 import os
 from enum import Enum
-import rclpy
+
 import numpy as np
 from gymnasium import spaces
+
 from pyrobosim_msgs.action import ExecuteTaskAction
 from pyrobosim_msgs.msg import ExecutionResult, TaskAction
 from pyrobosim_msgs.srv import RequestWorldState, ResetWorld
@@ -28,6 +29,7 @@ class BananaEnv(PyRoboSimRosEnv):
         max_steps_per_episode,
         realtime,
         discrete_actions,
+        executor=None,
     ):
         """
         Instantiate Banana environment.
@@ -35,8 +37,10 @@ class BananaEnv(PyRoboSimRosEnv):
         :param sub_types: Subtype of this environment (e.g. `BananaEnv.sub_types.Pick`).
         :param node: Node instance needed for ROS communication.
         :param max_steps_per_episode: Limit the steps (when to end the episode).
+            If -1, there is no limit to number of steps.
         :param realtime: Whether actions take time.
         :param discrete_actions: Choose discrete actions (needed for DQN).
+        :param executor: Optional ROS executor. It must be already spinning!
         """
         if sub_type == BananaEnv.sub_types.Pick:
             reward_fn = banana_picked_reward
@@ -60,6 +64,7 @@ class BananaEnv(PyRoboSimRosEnv):
             max_steps_per_episode,
             realtime,
             discrete_actions,
+            executor=executor,
         )
 
         self.num_locations = sum(len(loc.spawns) for loc in self.world_state.locations)
@@ -88,6 +93,8 @@ class BananaEnv(PyRoboSimRosEnv):
             high=np.ones(self.obs_size, dtype=np.float32),
         )
         print(f"{self.observation_space=}")
+
+        self.initialize()
 
     def _action_space(self):
         # Action space is defined by:
@@ -130,14 +137,16 @@ class BananaEnv(PyRoboSimRosEnv):
         goal.realtime_factor = 1.0 if self.realtime else -1.0
 
         goal_future = self.execute_action_client.send_goal_async(goal)
-        rclpy.spin_until_future_complete(self.node, goal_future)
+        self._spin_future(goal_future)
 
         result_future = goal_future.result().get_result_async()
-        rclpy.spin_until_future_complete(self.node, result_future)
+        self._spin_future(result_future)
 
         action_result = result_future.result().result
         self.step_number += 1
-        truncated = self.step_number >= self.max_steps_per_episode
+        truncated = (self.max_steps_per_episode >= 0) and (
+            self.step_number >= self.max_steps_per_episode
+        )
         if truncated:
             print(
                 f"Maximum steps ({self.max_steps_per_episode}) exceeded. Truncated episode."
@@ -153,9 +162,12 @@ class BananaEnv(PyRoboSimRosEnv):
         }
         return observation, reward, terminated, truncated, info
 
+    def initialize(self):
+        self.step_number = 0
+
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        self.step_number = 0
+        self.initialize()
         info = {}
 
         valid_reset = False
@@ -164,7 +176,7 @@ class BananaEnv(PyRoboSimRosEnv):
             future = self.reset_world_client.call_async(
                 ResetWorld.Request(seed=(seed or -1))
             )
-            rclpy.spin_until_future_complete(self.node, future)
+            self._spin_future(future)
 
             observation = self._get_obs()
 
@@ -178,7 +190,7 @@ class BananaEnv(PyRoboSimRosEnv):
     def _get_obs(self):
         """Calculate the observation. All elements are either -1.0 or +1.0."""
         future = self.request_state_client.call_async(RequestWorldState.Request())
-        rclpy.spin_until_future_complete(self.node, future)
+        self._spin_future(future)
         world_state = future.result().state
         robot_state = world_state.robots[0]
 
@@ -239,7 +251,6 @@ def banana_picked_reward(env, goal, action_result):
     terminated = False
     info = {"success": False}
 
-    robot_state = env.world_state.robots[0]
     # Discourage repeating the same navigation action or failing to pick/place.
     if (goal.action.type == "navigate") and (
         goal.action.target_location == env.previous_location
@@ -258,6 +269,7 @@ def banana_picked_reward(env, goal, action_result):
         terminated = True
         at_banana_location = True
         info["success"] = True
+        print(f"🍌 Picked banana. Episode succeeded in {env.step_number} steps!")
 
     # Reward shaping: Penalty if the robot is not at a location containing a banana.
     if not terminated and not at_banana_location:
@@ -300,7 +312,7 @@ def banana_on_table_reward(env, goal, action_result):
                 at_banana_location = True
             if obj.parent == "table0_tabletop":
                 print(
-                    f"🍌 Banana is on the table. "
+                    f"🍌 Placed banana on the table. "
                     f"Episode succeeded in {env.step_number} steps!"
                 )
                 reward += 10.0

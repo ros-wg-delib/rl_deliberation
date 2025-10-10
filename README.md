@@ -192,7 +192,26 @@ It should contain one entry named after your recent training run (e.g. `Greenhou
 
 ### See your freshly trained policy in action
 
+To run an evaluation, execute the following code.
+
 <!--- skip-next --->
 ```bash
-pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt
+pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt --num-episodes 5
 ```
+
+You can also see your trained policy in action as a ROS node.
+
+<!--- skip-next --->
+```bash
+pixi run policy_node --model GreenhousePlain_PPO_<timestamp>.pt
+```
+
+Then, in a separate terminal, you can send a goal.
+
+<!--- skip-next --->
+```bash
+pixi shell
+ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
+```
+
+Of course, you can also use this same action interface in your own user code!

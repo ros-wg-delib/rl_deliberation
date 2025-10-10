@@ -49,6 +49,7 @@ start_world = "python -m pyrobosim_ros_gym.start_world"
 train = "python -m pyrobosim_ros_gym.train"
 eval = "python -m pyrobosim_ros_gym.eval"
 tensorboard = "tensorboard --logdir ./train_logs/"
+policy_node = "python -m pyrobosim_ros_gym.policy_node"
 
 [tool.pixi.activation]
 scripts = ["install/setup.sh"]
