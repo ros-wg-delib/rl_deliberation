@@ -35,6 +35,7 @@ class BananaEnv(PyRoboSimRosEnv):
         :param sub_types: Subtype of this environment (e.g. `BananaEnv.sub_types.Pick`).
         :param node: Node instance needed for ROS communication.
         :param max_steps_per_episode: Limit the steps (when to end the episode).
+            If -1, there is no limit to number of steps.
         :param realtime: Whether actions take time.
         :param discrete_actions: Choose discrete actions (needed for DQN).
         """
@@ -89,6 +90,8 @@ class BananaEnv(PyRoboSimRosEnv):
         )
         print(f"{self.observation_space=}")
 
+        self.initialize()
+
     def _action_space(self):
         # Action space is defined by:
         #   Move: To all possible object spawns
@@ -137,7 +140,9 @@ class BananaEnv(PyRoboSimRosEnv):
 
         action_result = result_future.result().result
         self.step_number += 1
-        truncated = self.step_number >= self.max_steps_per_episode
+        truncated = (self.max_steps_per_episode >= 0) and (
+            self.step_number >= self.max_steps_per_episode
+        )
         if truncated:
             print(
                 f"Maximum steps ({self.max_steps_per_episode}) exceeded. Truncated episode."
@@ -153,9 +158,12 @@ class BananaEnv(PyRoboSimRosEnv):
         }
         return observation, reward, terminated, truncated, info
 
+    def initialize(self):
+        self.step_number = 0
+
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        self.step_number = 0
+        self.initialize()
         info = {}
 
         valid_reset = False

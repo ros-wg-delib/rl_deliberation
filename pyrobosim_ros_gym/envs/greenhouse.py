@@ -46,6 +46,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         :param sub_type: Subtype of this environment, e.g. `GreenhouseEnv.sub_types.Deterministic`.
         :param node: Node instance needed for ROS communication.
         :param max_steps_per_episode: Limit the steps (when to end the episode).
+            If -1, there is no limit to number of steps.
         :param realtime: Whether actions take time.
         :param discrete_actions: Choose discrete actions (needed for DQN).
         """
@@ -103,6 +104,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             "table_nw",
             "table_n",
         ]
+        self.initialize()
 
     def _action_space(self):
         if self.sub_type == GreenhouseEnv.sub_types.Battery:
@@ -120,7 +122,9 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
     def step(self, action):
         info = {}
-        truncated = self.step_number >= self.max_steps_per_episode
+        truncated = (self.max_steps_per_episode >= 0) and (
+            self.step_number >= self.max_steps_per_episode
+        )
         if truncated:
             print(
                 f"Maximum steps ({self.max_steps_per_episode}) exceeded. "
@@ -160,10 +164,11 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         # print(f"{observation=}")
 
         info = {
+            "success": self.watered_plant_fraction() == 1.0,
             "metrics": {
                 "watered_plant_fraction": float(self.watered_plant_fraction()),
                 "battery_level": float(self.battery_level()),
-            }
+            },
         }
 
         return observation, reward, terminated, truncated, info
@@ -272,6 +277,12 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
         return plants_by_distance
 
+    def initialize(self):
+        self.step_number = 0
+        self.waypoint_i = -1
+        self.watered = {plant: False for plant in self.good_plants}
+        self.go_to_loc(self.get_next_location())
+
     def reset(self, seed=None, options=None):
         super().reset(seed)
 
@@ -297,12 +308,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             num_reset_attempts += 1
             seed = None  # subsequent resets need to not use a fixed seed
 
-        # Reset helper vars
-        self.step_number = 0
-        self.waypoint_i = -1
-        self.watered = {plant: False for plant in self.good_plants}
-        self.go_to_loc(self.get_next_location())
-
+        self.initialize()
         print(f"Reset environment in {num_reset_attempts} attempt(s).")
         return observation, {}
 

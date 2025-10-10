@@ -35,6 +35,7 @@ class PyRoboSimRosEnv(gym.Env):
         :param reset_validation_fn: Function that calculates whether a reset is valid.
             If None (default), all resets are valid.
         :param max_steps_per_episode: Maximum number of steps before truncating an episode.
+            If -1, there is no limit to number of steps.
         :param realtime: If True, commands PyRoboSim to run actions in real time.
             If False, actions run as quickly as possible for faster training.
         :param discrete_actions: If True, uses discrete actions, else uses continuous.
@@ -93,6 +94,10 @@ class PyRoboSimRosEnv(gym.Env):
         print(f"{self.action_space=}")
 
     def _action_space(self):
+        raise NotImplementedError("implement in sub-class")
+
+    def initialize(self):
+        """Resets helper variables for deployment without doing a full reset."""
         raise NotImplementedError("implement in sub-class")
 
     def step(self, action):
