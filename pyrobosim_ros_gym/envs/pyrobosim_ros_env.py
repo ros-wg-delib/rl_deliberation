@@ -12,7 +12,6 @@ from pyrobosim_msgs.srv import (
     ResetWorld,
     SetLocationState,
 )
-import random
 
 
 class PyRoboSimRosEnv(gym.Env):
@@ -121,10 +120,5 @@ class PyRoboSimRosEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         """Resets the environment with a specified seed and options."""
-        if seed is None:
-            seed = random.randint(0, 2**31 - 1)
-            print(f"Resetting environment with randomly generated {seed=}")
-        else:
-            print(f"Resetting environment with fixed {seed=}")
-
+        print(f"Resetting environment with {seed=}")
         super().reset(seed=seed)
