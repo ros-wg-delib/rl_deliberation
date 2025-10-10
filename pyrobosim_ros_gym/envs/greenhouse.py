@@ -39,6 +39,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         max_steps_per_episode,
         realtime,
         discrete_actions,
+        executor=None,
     ):
         """
         Instantiate Greenhouse environment.
@@ -49,6 +50,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             If -1, there is no limit to number of steps.
         :param realtime: Whether actions take time.
         :param discrete_actions: Choose discrete actions (needed for DQN).
+        :param executor: Optional ROS executor. It must be already spinning!
         """
         if sub_type == GreenhouseEnv.sub_types.Plain:
             # All plants are in their places
@@ -70,6 +72,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             max_steps_per_episode,
             realtime,
             discrete_actions,
+            executor=executor,
         )
 
         # Observation space is defined by:
@@ -145,7 +148,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             self.go_to_loc("charger")
 
         future = self.request_state_client.call_async(RequestWorldState.Request())
-        rclpy.spin_until_future_complete(self.node, future)
+        self._spin_future(future)
         self.world_state = future.result().state
 
         self.step_number += 1
@@ -181,10 +184,10 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         close_goal.action.target_location = loc
 
         goal_future = self.execute_action_client.send_goal_async(close_goal)
-        rclpy.spin_until_future_complete(self.node, goal_future)
+        self._spin_future(goal_future)
 
         result_future = goal_future.result().get_result_async()
-        rclpy.spin_until_future_complete(self.node, result_future)
+        self._spin_future(result_future)
 
     def _calculate_reward(self, action):
         reward = 0.0
@@ -292,7 +295,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             future = self.reset_world_client.call_async(
                 ResetWorld.Request(seed=(seed or -1))
             )
-            rclpy.spin_until_future_complete(self.node, future)
+            self._spin_future(future)
 
             # Validate that there are no two plants in the same location.
             observation = self._get_obs()
@@ -315,7 +318,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
     def _get_obs(self):
         """Calculate the observations"""
         future = self.request_state_client.call_async(RequestWorldState.Request())
-        rclpy.spin_until_future_complete(self.node, future)
+        self._spin_future(future)
         world_state = future.result().state
         plants_by_distance = self._get_plants_by_distance(world_state)
 
@@ -357,7 +360,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         nav_goal.realtime_factor = 1.0 if self.realtime else -1.0
 
         goal_future = self.execute_action_client.send_goal_async(nav_goal)
-        rclpy.spin_until_future_complete(self.node, goal_future)
+        self._spin_future(goal_future)
 
         result_future = goal_future.result().get_result_async()
-        rclpy.spin_until_future_complete(self.node, result_future)
+        self._spin_future(result_future)
