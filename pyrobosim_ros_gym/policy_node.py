@@ -24,7 +24,7 @@ from pyrobosim_ros_gym.policies import model_and_env_type_from_path
 
 
 class PolicyServerNode(Node):
-    def __init__(self, model: str):
+    def __init__(self, model: str, executor):
         super().__init__("policy_node")
 
         # Load the model and environment
@@ -32,6 +32,7 @@ class PolicyServerNode(Node):
         self.env = get_env_by_name(
             env_type,
             self,
+            executor=executor,
             max_steps_per_episode=-1,
             realtime=True,
             discrete_actions=isinstance(self.model.action_space, Discrete),
@@ -103,9 +104,13 @@ def main(args=None):
 
     rclpy.init(args=args)
     try:
-        policy_server = PolicyServerNode(cli_args.model)
         executor = MultiThreadedExecutor(num_threads=2)
-        rclpy.spin(policy_server, executor=executor)
+        import threading
+
+        threading.Thread(target=executor.spin).start()
+        policy_server = PolicyServerNode(cli_args.model, executor)
+        while True:
+            time.sleep(0.5)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
 

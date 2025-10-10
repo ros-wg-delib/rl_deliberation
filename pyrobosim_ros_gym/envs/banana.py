@@ -28,6 +28,7 @@ class BananaEnv(PyRoboSimRosEnv):
         max_steps_per_episode,
         realtime,
         discrete_actions,
+        executor=None,
     ):
         """
         Instantiate Banana environment.
@@ -38,6 +39,7 @@ class BananaEnv(PyRoboSimRosEnv):
             If -1, there is no limit to number of steps.
         :param realtime: Whether actions take time.
         :param discrete_actions: Choose discrete actions (needed for DQN).
+        :param executor: Optional ROS executor. It must be already spinning!
         """
         if sub_type == BananaEnv.sub_types.Pick:
             reward_fn = banana_picked_reward
@@ -61,6 +63,7 @@ class BananaEnv(PyRoboSimRosEnv):
             max_steps_per_episode,
             realtime,
             discrete_actions,
+            executor=executor,
         )
 
         self.num_locations = sum(len(loc.spawns) for loc in self.world_state.locations)
@@ -133,10 +136,10 @@ class BananaEnv(PyRoboSimRosEnv):
         goal.realtime_factor = 1.0 if self.realtime else -1.0
 
         goal_future = self.execute_action_client.send_goal_async(goal)
-        rclpy.spin_until_future_complete(self.node, goal_future)
+        self._spin_future(goal_future)
 
         result_future = goal_future.result().get_result_async()
-        rclpy.spin_until_future_complete(self.node, result_future)
+        self._spin_future(result_future)
 
         action_result = result_future.result().result
         self.step_number += 1
@@ -172,7 +175,7 @@ class BananaEnv(PyRoboSimRosEnv):
             future = self.reset_world_client.call_async(
                 ResetWorld.Request(seed=(seed or -1))
             )
-            rclpy.spin_until_future_complete(self.node, future)
+            self._spin_future(future)
 
             observation = self._get_obs()
 
@@ -186,7 +189,7 @@ class BananaEnv(PyRoboSimRosEnv):
     def _get_obs(self):
         """Calculate the observation. All elements are either -1.0 or +1.0."""
         future = self.request_state_client.call_async(RequestWorldState.Request())
-        rclpy.spin_until_future_complete(self.node, future)
+        self._spin_future(future)
         world_state = future.result().state
         robot_state = world_state.robots[0]
 

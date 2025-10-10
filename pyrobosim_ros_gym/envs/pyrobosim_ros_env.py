@@ -1,5 +1,7 @@
-import gymnasium as gym
+import time
 from enum import Enum
+
+import gymnasium as gym
 import rclpy
 from rclpy.action import ActionClient
 
@@ -26,6 +28,7 @@ class PyRoboSimRosEnv(gym.Env):
         max_steps_per_episode=50,
         realtime=True,
         discrete_actions=True,
+        executor=None,
     ):
         """
         Instantiates a PyRoboSim ROS environment.
@@ -39,9 +42,15 @@ class PyRoboSimRosEnv(gym.Env):
         :param realtime: If True, commands PyRoboSim to run actions in real time.
             If False, actions run as quickly as possible for faster training.
         :param discrete_actions: If True, uses discrete actions, else uses continuous.
+        :param executor: Optional ROS executor. It must be already spinning!
         """
         super().__init__()
         self.node = node
+        self.executor = executor
+        if self.executor is not None:
+            self.executor.add_node(self.node)
+            self.executor.wake()
+
         self.realtime = realtime
         self.max_steps_per_episode = max_steps_per_episode
         self.discrete_actions = discrete_actions
@@ -76,11 +85,11 @@ class PyRoboSimRosEnv(gym.Env):
         self.set_location_state_client.wait_for_service()
 
         future = self.request_info_client.call_async(RequestWorldInfo.Request())
-        rclpy.spin_until_future_complete(self.node, future)
+        self._spin_future(future)
         self.world_info = future.result().info
 
         future = self.request_state_client.call_async(RequestWorldState.Request())
-        rclpy.spin_until_future_complete(self.node, future)
+        self._spin_future(future)
         self.world_state = future.result().state
 
         self.all_locations = []
@@ -92,6 +101,13 @@ class PyRoboSimRosEnv(gym.Env):
 
         self.action_space = self._action_space()
         print(f"{self.action_space=}")
+
+    def _spin_future(self, future):
+        if self.executor is None:
+            rclpy.spin_until_future_complete(self.node, future)
+        else:
+            while not future.done():
+                time.sleep(0.1)
 
     def _action_space(self):
         raise NotImplementedError("implement in sub-class")

@@ -1,6 +1,7 @@
 from typing import List, Dict
 
 import rclpy
+from rclpy.executors import Executor
 
 from .banana import BananaEnv
 from .greenhouse import GreenhouseEnv
@@ -40,6 +41,7 @@ def get_env_by_name(
     max_steps_per_episode: int,
     realtime: bool,
     discrete_actions: bool,
+    executor: Executor | None = None,
 ) -> PyRoboSimRosEnv:
     """
     Instantiate an environment class for a given type and `sub_type`.
@@ -49,6 +51,7 @@ def get_env_by_name(
     :param max_steps_per_episode: Limit the steps (when to end the episode).
     :param realtime: Whether actions take time.
     :param discrete_actions: Choose discrete actions (needed for DQN).
+    :param executor: Optional ROS executor. It must be already spinning!
     """
     base_class, sub_type = get_env_class_and_subtype_from_name(env_name)
     return base_class(
@@ -57,4 +60,5 @@ def get_env_by_name(
         max_steps_per_episode,
         realtime,
         discrete_actions,
+        executor=executor,
     )
