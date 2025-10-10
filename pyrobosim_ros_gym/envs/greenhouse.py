@@ -1,7 +1,7 @@
 from enum import Enum
 import os
+
 import numpy as np
-import rclpy
 from geometry_msgs.msg import Point
 from gymnasium import spaces
 from pyrobosim_msgs.msg import TaskAction, WorldState
