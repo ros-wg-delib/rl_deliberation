@@ -47,6 +47,7 @@ if __name__ == "__main__":
     )
 
     # Evaluate the model for some steps
+    num_successful_episodes = 0
     reward_per_episode = [0.0 for _ in range(args.num_episodes)]
     custom_metrics_store: Dict[str, List[float]] = {}
     custom_metrics_episode_mean: Dict[str, float] = {}
@@ -77,7 +78,10 @@ if __name__ == "__main__":
             print(f"{truncated=}")
             print("." * 10)
             if terminated or truncated:
-                print(f"<<< Episode {i_e+1} finished.")
+                success = info["success"]
+                if success:
+                    num_successful_episodes += 1
+                print(f"<<< Episode {i_e+1} finished with {success=}.")
                 print(f"Total reward: {reward_per_episode[i_e]}")
                 for k, v in custom_metrics_store.items():
                     mean_metric = sum(v) / len(v) if len(v) > 0 else 0.0
@@ -90,6 +94,11 @@ if __name__ == "__main__":
                 break
 
     print("Summary:")
+    success_percent = 100.0 * num_successful_episodes / args.num_episodes
+    print(
+        f"Successful episodes: {num_successful_episodes} / {args.num_episodes} "
+        f"({success_percent:.2f}%)"
+    )
     print(f"Reward over {args.num_episodes} episodes:")
     print(f" Mean: {sum(reward_per_episode)/args.num_episodes}")
     print(f" Min: {min(reward_per_episode)}")
