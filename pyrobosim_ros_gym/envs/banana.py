@@ -3,7 +3,6 @@
 from pprint import pprint
 import os
 from enum import Enum
-import rclpy
 import numpy as np
 from gymnasium import spaces
 from pyrobosim_msgs.action import ExecuteTaskAction
