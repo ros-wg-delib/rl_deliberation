@@ -249,7 +249,6 @@ def banana_picked_reward(env, goal, action_result):
     terminated = False
     info = {"success": False}
 
-    robot_state = env.world_state.robots[0]
     # Discourage repeating the same navigation action or failing to pick/place.
     if (goal.action.type == "navigate") and (
         goal.action.target_location == env.previous_location
@@ -268,6 +267,7 @@ def banana_picked_reward(env, goal, action_result):
         terminated = True
         at_banana_location = True
         info["success"] = True
+        print(f"🍌 Picked banana. Episode succeeded in {env.step_number} steps!")
 
     # Reward shaping: Penalty if the robot is not at a location containing a banana.
     if not terminated and not at_banana_location:
@@ -310,7 +310,7 @@ def banana_on_table_reward(env, goal, action_result):
                 at_banana_location = True
             if obj.parent == "table0_tabletop":
                 print(
-                    f"🍌 Banana is on the table. "
+                    f"🍌 Placed banana on the table. "
                     f"Episode succeeded in {env.step_number} steps!"
                 )
                 reward += 10.0
