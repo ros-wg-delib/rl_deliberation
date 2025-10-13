@@ -1,0 +1,18 @@
+# ROS action definition for executing a policy
+
+# Goal (empty)
+
+---
+
+# Result
+
+bool success
+uint64 num_steps
+float64 cumulative_reward
+
+---
+
+# Feedback
+
+uint64 num_steps
+float64 cumulative_reward

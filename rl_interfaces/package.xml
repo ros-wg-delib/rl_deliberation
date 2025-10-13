@@ -1,21 +1,21 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>rl_ws_worlds</name>
+  <name>rl_interfaces</name>
   <version>1.0.0</version>
-  <description>Example worlds for exploring reinforcement learning.</description>
+  <description>Example interfaces for exploring reinforcement learning.</description>
   <maintainer email="christian.henkel2@de.bosch.com">Christian Henkel</maintainer>
   <maintainer email="sebas.a.castro@gmail.com">Sebastian Castro</maintainer>
   <license>BSD-3-Clause</license>
 
-  <depend>pyrobosim_ros</depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
 
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
-  <test_depend>python3-pytest</test_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>
-    <build_type>ament_python</build_type>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

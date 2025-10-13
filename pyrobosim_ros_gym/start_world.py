@@ -13,13 +13,14 @@ import rclpy
 import threading
 
 from pyrobosim.core import WorldYamlLoader
-from pyrobosim.gui import start_gui
+from pyrobosim.gui import start_gui, WorldCanvasOptions
 from pyrobosim_ros.ros_interface import WorldROSWrapper
 
 from pyrobosim_ros_gym.envs import (
     get_env_class_and_subtype_from_name,
     available_envs_w_subtype,
 )
+from pyrobosim_ros_gym.envs.greenhouse import GreenhouseEnv
 
 
 def create_ros_node(world_file_path) -> WorldROSWrapper:
@@ -44,6 +45,7 @@ if __name__ == "__main__":
 
     env_class, sub_type = get_env_class_and_subtype_from_name(args.env)
     node = create_ros_node(env_class.get_world_file_path(sub_type))
+    show_room_names = env_class != GreenhouseEnv
 
     if args.headless:
         # Start ROS node in main thread if there is no GUI.
@@ -54,4 +56,5 @@ if __name__ == "__main__":
         ros_thread.start()
 
         # Start GUI in main thread.
-        start_gui(node.world)
+        options = WorldCanvasOptions(show_room_names=show_room_names)
+        start_gui(node.world, options=options)

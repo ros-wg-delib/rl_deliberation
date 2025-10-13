@@ -1,15 +1,15 @@
 from enum import Enum
 import os
+
 import numpy as np
-import rclpy
 from geometry_msgs.msg import Point
 from gymnasium import spaces
-from pyrobosim_msgs.msg import TaskAction, WorldState
 
-from .pyrobosim_ros_env import PyRoboSimRosEnv
 from pyrobosim_msgs.action import ExecuteTaskAction
 from pyrobosim_msgs.msg import TaskAction, WorldState
 from pyrobosim_msgs.srv import RequestWorldState, ResetWorld
+
+from .pyrobosim_ros_env import PyRoboSimRosEnv
 
 
 def _dist(a: Point, b: Point) -> float:
@@ -39,6 +39,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         max_steps_per_episode,
         realtime,
         discrete_actions,
+        executor=None,
     ):
         """
         Instantiate Greenhouse environment.
@@ -46,8 +47,10 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         :param sub_type: Subtype of this environment, e.g. `GreenhouseEnv.sub_types.Deterministic`.
         :param node: Node instance needed for ROS communication.
         :param max_steps_per_episode: Limit the steps (when to end the episode).
+            If -1, there is no limit to number of steps.
         :param realtime: Whether actions take time.
         :param discrete_actions: Choose discrete actions (needed for DQN).
+        :param executor: Optional ROS executor. It must be already spinning!
         """
         if sub_type == GreenhouseEnv.sub_types.Plain:
             # All plants are in their places
@@ -69,6 +72,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             max_steps_per_episode,
             realtime,
             discrete_actions,
+            executor=executor,
         )
 
         # Observation space is defined by:
@@ -103,6 +107,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             "table_nw",
             "table_n",
         ]
+        self.initialize()
 
     def _action_space(self):
         if self.sub_type == GreenhouseEnv.sub_types.Battery:
@@ -120,7 +125,9 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
     def step(self, action):
         info = {}
-        truncated = self.step_number >= self.max_steps_per_episode
+        truncated = (self.max_steps_per_episode >= 0) and (
+            self.step_number >= self.max_steps_per_episode
+        )
         if truncated:
             print(
                 f"Maximum steps ({self.max_steps_per_episode}) exceeded. "
@@ -141,7 +148,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             self.go_to_loc("charger")
 
         future = self.request_state_client.call_async(RequestWorldState.Request())
-        rclpy.spin_until_future_complete(self.node, future)
+        self._spin_future(future)
         self.world_state = future.result().state
 
         self.step_number += 1
@@ -160,10 +167,11 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         # print(f"{observation=}")
 
         info = {
+            "success": self.watered_plant_fraction() == 1.0,
             "metrics": {
                 "watered_plant_fraction": float(self.watered_plant_fraction()),
                 "battery_level": float(self.battery_level()),
-            }
+            },
         }
 
         return observation, reward, terminated, truncated, info
@@ -176,10 +184,10 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         close_goal.action.target_location = loc
 
         goal_future = self.execute_action_client.send_goal_async(close_goal)
-        rclpy.spin_until_future_complete(self.node, goal_future)
+        self._spin_future(goal_future)
 
         result_future = goal_future.result().get_result_async()
-        rclpy.spin_until_future_complete(self.node, result_future)
+        self._spin_future(result_future)
 
     def _calculate_reward(self, action):
         reward = 0.0
@@ -272,6 +280,12 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
         return plants_by_distance
 
+    def initialize(self):
+        self.step_number = 0
+        self.waypoint_i = -1
+        self.watered = {plant: False for plant in self.good_plants}
+        self.go_to_loc(self.get_next_location())
+
     def reset(self, seed=None, options=None):
         super().reset(seed)
 
@@ -281,7 +295,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             future = self.reset_world_client.call_async(
                 ResetWorld.Request(seed=(seed or -1))
             )
-            rclpy.spin_until_future_complete(self.node, future)
+            self._spin_future(future)
 
             # Validate that there are no two plants in the same location.
             observation = self._get_obs()
@@ -297,19 +311,14 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             num_reset_attempts += 1
             seed = None  # subsequent resets need to not use a fixed seed
 
-        # Reset helper vars
-        self.step_number = 0
-        self.waypoint_i = -1
-        self.watered = {plant: False for plant in self.good_plants}
-        self.go_to_loc(self.get_next_location())
-
+        self.initialize()
         print(f"Reset environment in {num_reset_attempts} attempt(s).")
         return observation, {}
 
     def _get_obs(self):
         """Calculate the observations"""
         future = self.request_state_client.call_async(RequestWorldState.Request())
-        rclpy.spin_until_future_complete(self.node, future)
+        self._spin_future(future)
         world_state = future.result().state
         plants_by_distance = self._get_plants_by_distance(world_state)
 
@@ -351,7 +360,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         nav_goal.realtime_factor = 1.0 if self.realtime else -1.0
 
         goal_future = self.execute_action_client.send_goal_async(nav_goal)
-        rclpy.spin_until_future_complete(self.node, goal_future)
+        self._spin_future(goal_future)
 
         result_future = goal_future.result().get_result_async()
-        rclpy.spin_until_future_complete(self.node, result_future)
+        self._spin_future(result_future)

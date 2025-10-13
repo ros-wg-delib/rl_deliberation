@@ -17,7 +17,7 @@ setup(
     zip_safe=True,
     maintainer="Christian Henkel",
     maintainer_email="christian.henkel2@de.bosch.com",
-    description="Example worlds for the ROS 2 Deliberation Workshop",
+    description="Example worlds for exploring reinforcement learning.",
     license="BSD-3-Clause",
     entry_points={
         "console_scripts": [
