@@ -31,6 +31,9 @@ if __name__ == "__main__":
         help="The number of episodes to evaluate.",
     )
     parser.add_argument("--seed", default=42, type=int, help="The RNG seed to use.")
+    parser.add_argument(
+        "--realtime", action="store_true", help="If true, slows down to real time."
+    )
     args = parser.parse_args()
 
     rclpy.init()
@@ -42,7 +45,7 @@ if __name__ == "__main__":
         env_type,
         node,
         max_steps_per_episode=15,
-        realtime=True,
+        realtime=args.realtime,
         discrete_actions=isinstance(model.action_space, Discrete),
     )
 

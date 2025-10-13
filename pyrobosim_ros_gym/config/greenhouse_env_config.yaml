@@ -3,12 +3,15 @@
 training:
   # General training algorithms
   max_training_steps: 10000
-  reward_threshold: 7.5  # Mean reward to terminate training
 
   # Evaluations during training
+  #   Every eval_freq steps, n_eval_episodes episodes will be run.
+  #   If the mean cumulative reward is greater than reward_threshold,
+  #   training will complete.
   eval:
     n_eval_episodes: 5
     eval_freq: 500
+    reward_threshold: 7.0
 
   # Individual algorithm options
   DQN:
@@ -42,7 +45,8 @@ training:
     batch_size: 16
     train_freq: 4  # steps
     gradient_steps: 5
-    target_update_interval: 50
+    tau: 0.005
+    target_update_interval: 10
     policy_kwargs:
       activation_fn: torch.nn.ReLU
       pi: [16, 8]  # actor size

@@ -89,7 +89,7 @@ Assuming the environment is running, execute the evaluation script in another te
 
 <!--- skip-next --->
 ```bash
-pixi run eval --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1
+pixi run eval --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1 --realtime
 ```
 <!--- workdir: /rl_deliberation --->
 <!--
@@ -102,7 +102,7 @@ In your terminal, you will see multiple sections in the following format:
 
 ```plaintext
 ..........
-obs=array([1.        , 0.99194384, 0.        , 2.7288349, 0.        , 3.3768525, 1.0], dtype=float32)
+obs=array([1.        , 0.99194384, 0.        , 2.7288349, 0.        , 3.3768525, 1.], dtype=float32)
 action=array(0)
 Maximum steps (10) exceeded. Truncated episode.
 reward=0.0
@@ -129,7 +129,7 @@ At the end of the episode, and after all episodes are completed, you will see so
 
 ```plaintext
 ..........
-<<< Episode 1 finished.
+<<< Episode 1 finished with success=False.
 Total reward: 0.0
 Mean watered_plant_fraction: 0.0
 Mean battery_level: 100.0
@@ -196,7 +196,14 @@ To run an evaluation, execute the following code.
 
 <!--- skip-next --->
 ```bash
-pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt --num-episodes 5
+pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt --num-episodes 3 --realtime
+```
+
+or to run more episodes as quickly as possible, launch your world with `--headless` and then execute.
+
+<!--- skip-next --->
+```bash
+pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt --num-episodes 20
 ```
 
 You can also see your trained policy in action as a ROS node.
