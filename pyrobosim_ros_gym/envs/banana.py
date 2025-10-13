@@ -147,6 +147,10 @@ class BananaEnv(PyRoboSimRosEnv):
         reward, terminated, info = self.reward_fn(goal, action_result)
         self.previous_action_type = goal.action.type
 
+        info["metrics"] = {
+            "at_banana_location": float(is_at_banana_location(self)),
+            "holding_banana": float(is_holding_banana(self)),
+        }
         return observation, reward, terminated, truncated, info
 
     def reset(self, seed=None, options=None):
@@ -166,6 +170,7 @@ class BananaEnv(PyRoboSimRosEnv):
 
             valid_reset = self.reset_validation_fn()
             num_reset_attempts += 1
+            seed = None  # subsequent resets need to not use a fixed seed
 
         print(f"Reset environment in {num_reset_attempts} attempt(s).")
         return observation, info
@@ -200,13 +205,6 @@ class BananaEnv(PyRoboSimRosEnv):
 
         self.world_state = world_state
         return obs
-
-    def eval(self):
-        """Return values of custom metrics for evaluation."""
-        return {
-            "at_banana_location": float(is_at_banana_location(self)),
-            "holding_banana": float(is_holding_banana(self)),
-        }
 
 
 def is_at_banana_location(env):
