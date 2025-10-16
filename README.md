@@ -73,7 +73,8 @@ There are different environments available. For example, to run the Greenhouse e
 pixi run start_world --env GreenhousePlain
 ```
 
-All the following commands assume that the environment is running. You can also run the environment in headless mode for training.
+All the following commands assume that the environment is running.
+You can also run the environment in headless mode for training.
 
 <!--- skip-next --->
 ```bash
@@ -88,7 +89,7 @@ Assuming the environment is running, execute the evaluation script in another te
 
 <!--- skip-next --->
 ```bash
-pixi run eval --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1
+pixi run eval --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1 --realtime
 ```
 <!--- workdir: /rl_deliberation --->
 <!--
@@ -101,13 +102,11 @@ In your terminal, you will see multiple sections in the following format:
 
 ```plaintext
 ..........
-obs=array([[1.        , 0.99194384],
-       [0.        , 2.7288349 ],
-       [0.        , 3.3768525 ]], dtype=float32)
+obs=array([1.        , 0.99194384, 0.        , 2.7288349, 0.        , 3.3768525, 1.], dtype=float32)
 action=array(0)
 Maximum steps (10) exceeded. Truncated episode.
 reward=0.0
-custom_metrics={'watered_plant_percent': 0.0, 'water_tank_level': 100.0}
+custom_metrics={'watered_plant_fraction': 0.0, 'battery_level': 100.0}
 terminated=False
 truncated=False
 ..........
@@ -115,12 +114,12 @@ truncated=False
 
 This is one step of the environment and the agent's interaction with it.
 
-- `obs` is the observation from the environment. It is a 3x2 array with information about the 3 closest objects plants, each with a class (0 or 1) and the distance to it.
+- `obs` is the observation from the environment. It is an array with information about the 3 closest plant objects, with a class label (0 or 1), the distance to each object. It also has the robot's battery level and whether its current location is watered at the end.
 - `action` is the action taken by the agent. In this simple example, it can choose between 0 = move on and 1 = water plant.
 - `reward` is the reward received after taking the action, which is `0.0` in this case, because the agent did not water any plant.
 - `custom_metrics` provides additional information about the episode:
-  - `watered_plant_percent` indicates the percentage of plants watered thus far in the episode.
-  - `water_tank_level` indicates the current water level in the robot's tank. (This will no decrease for this environment type, but it will later.)
+  - `watered_plant_fraction` indicates the fraction of plants (between 0 and 1) watered thus far in the episode.
+  - `battery_level` indicates the current battery level of the robot. (This will not decrease for this environment type, but it will later.)
 - `terminated` indicates whether the episode reached a terminal state (e.g., the task was completed or failed).
 - `truncated` indicates whether the episode ended due to a time limit.
 
@@ -130,21 +129,21 @@ At the end of the episode, and after all episodes are completed, you will see so
 
 ```plaintext
 ..........
-<<< Episode 1 finished.
+<<< Episode 1 finished with success=False.
 Total reward: 0.0
-Mean watered_plant_percent: 0.0
-Mean water_tank_level: 100.0
+Mean watered_plant_fraction: 0.0
+Mean battery_level: 100.0
 ====================
 Summary:
 Reward over 1 episodes:
  Mean: 0.0
  Min: 0.0
  Max: 0.0
-Custom metric 'watered_plant_percent' over 1 episodes:
+Custom metric 'watered_plant_fraction' over 1 episodes:
  Mean: 0.0
  Min: 0.0
  Max: 0.0
-Custom metric 'water_tank_level' over 1 episodes:
+Custom metric 'battery_level' over 1 episodes:
  Mean: 100.0
  Min: 100.0
  Max: 100.0
@@ -171,7 +170,7 @@ Note that this needs the `--discrete-actions` flag.
 pixi run train --env GreenhousePlain --config greenhouse_env_config.yaml --model-type DQN --discrete-actions --log
 ```
 
-Note that ar the end of training, the model name and path will be printed in the terminal:
+Note that at the end of training, the model name and path will be printed in the terminal:
 
 ```plaintext
 New best mean reward!
@@ -193,7 +192,33 @@ It should contain one entry named after your recent training run (e.g. `Greenhou
 
 ### See your freshly trained policy in action
 
+To run an evaluation, execute the following code.
+
 <!--- skip-next --->
 ```bash
-pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt
+pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt --num-episodes 3 --realtime
 ```
+
+or to run more episodes as quickly as possible, launch your world with `--headless` and then execute.
+
+<!--- skip-next --->
+```bash
+pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt --num-episodes 20
+```
+
+You can also see your trained policy in action as a ROS node.
+
+<!--- skip-next --->
+```bash
+pixi run policy_node --model GreenhousePlain_PPO_<timestamp>.pt
+```
+
+Then, in a separate terminal, you can send a goal.
+
+<!--- skip-next --->
+```bash
+pixi shell
+ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
+```
+
+Of course, you can also use this same action interface in your own user code!
