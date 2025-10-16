@@ -118,17 +118,49 @@ where $\gamma$ is a discount factor. -->
 
 # Example 1: You are the agent
 
+::: columns
+
+:::: column
+
 Start by exploring the environment.
 
 ```bash
-pixi run start_world --env GreenhousePlain
+pixi run start_world --env
+GreenhousePlain
 ```
+
+![Greenhouse environment](greenhouse.png){height=100px}
+
+You are a robot that has to water plants in a greenhouse.
+
+::::
+
+:::: column
 
 Then, in another terminal, run:
 
 ```bash
-pixi run eval_manual  # TODO
+pixi run eval
+--manual-env-control
+GreenhousePlain
 ```
+
+---
+
+```plain
+Enter desired action from [0, 1]:
+```
+
+Now you can choose between
+
+- `0`: Move forward without watering
+- `1`: Water the plant and move to the next plant
+
+But be __careful__: If you water the evil plant (red), you will be eaten.
+
+::::
+
+:::
 
 # Introduction: Environment = MDP
 
