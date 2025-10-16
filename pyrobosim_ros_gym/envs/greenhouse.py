@@ -79,13 +79,14 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         self.max_n_objects = 3
         self.max_dist = 10
         # array of n objects with a class and distance each,
-        # plus battery level and current location watered.
-        self.obs_size = 2 * self.max_n_objects + 2
-        low = -1.0 * np.ones(self.obs_size, dtype=np.float32)
-        low[-2:] = 0.0
+        # plus current location watered and (optionally) battery level.
+        self.obs_size = 2 * self.max_n_objects + 1
+        if self.sub_type == GreenhouseEnv.sub_types.Battery:
+            self.obs_size += 1
+
+        low = np.zeros(self.obs_size, dtype=np.float32)
         high = np.ones(self.obs_size, dtype=np.float32)  # max class = 1
-        high[1::2] = self.max_dist
-        high[-2:] = 1.0
+        high[1 : self.max_n_objects * 2 : 2] = self.max_dist
         self.observation_space = spaces.Box(low=low, high=high)
         print(f"{self.observation_space=}")
 
@@ -142,6 +143,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             action = np.argmax(action)
 
         # Execute the current actions before calculating reward
+        self.previous_battery_level = self.battery_level()
         if action == 1:  # water a plant
             self.mark_table(self.get_current_location())
         elif action == 2:  # charge
@@ -191,7 +193,6 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
     def _calculate_reward(self, action):
         reward = 0.0
-        terminated = False
         plants_by_distance = self._get_plants_by_distance(self.world_state)
         # print(f"{action=}")
 
@@ -239,14 +240,14 @@ class GreenhouseEnv(PyRoboSimRosEnv):
                 # print("\tWasted water")
                 reward = -0.5
 
-        if action == 2:  # charging
+        elif action == 2:  # charging
             # Reward shaping to get the robot to visit the charger when its
             # battery is low, but not when it is high.
-            if self.battery_level() < 5.0:
-                # print("\tCharged when battery low :)")
-                reward += 1.0
+            if self.previous_battery_level <= 5.0:
+                # print(f"\tCharged when battery low ({self.previous_battery_level}) :)")
+                reward += 0.5
             else:
-                # print(f"\tCharged when battery high ({self.battery_level()}) :(")
+                # print(f"\tCharged when battery high ({self.previous_battery_level}) :(")
                 reward -= 1.0
 
         # print(f"{self.watered=}")
@@ -284,6 +285,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         self.step_number = 0
         self.waypoint_i = -1
         self.watered = {plant: False for plant in self.good_plants}
+        self.previous_battery_level = self.battery_level()
         self.go_to_loc(self.get_next_location())
 
     def reset(self, seed=None, options=None):
@@ -323,25 +325,25 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         plants_by_distance = self._get_plants_by_distance(world_state)
 
         obs = np.zeros(self.obs_size, dtype=np.float32)
-        obs[:] = -1  # unknown class
-        n_observations = 0
-        while n_observations < self.max_n_objects:
+        start_idx = 0
+
+        for _ in range(self.max_n_objects):
             closest_d = min(plants_by_distance.keys())
             plant = plants_by_distance.pop(closest_d)
             plant_class = 0 if plant.category == "plant_good" else 1
-            obs[2 * n_observations] = plant_class
-            obs[2 * n_observations + 1] = closest_d
-            n_observations += 1
+            obs[start_idx] = plant_class
+            obs[start_idx + 1] = closest_d
+            start_idx += 2
 
-        obs[-2] = self.battery_level() / 100.0
-
-        obs[-1] = 0.0
         cur_loc = world_state.robots[0].last_visited_location
         for loc in world_state.locations:
             if cur_loc == loc.name or cur_loc in loc.spawns:
                 if not loc.is_open:
-                    obs[-1] = 1.0  # closed = watered
+                    obs[start_idx] = 1.0  # closed = watered
                     break
+
+        if self.sub_type == self.sub_type.Battery:
+            obs[start_idx + 1] = self.battery_level() / 100.0
 
         self.world_state = world_state
         return obs

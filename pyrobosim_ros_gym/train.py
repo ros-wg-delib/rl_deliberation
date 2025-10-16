@@ -160,17 +160,18 @@ if __name__ == "__main__":
         raise RuntimeError(f"Invalid model type: {args.model_type}")
     print(f"\nTraining with {args.model_type}...\n")
 
-    # Train the model until it exceeds a specified reward threshold
+    # Train the model until it exceeds a specified reward threshold in evals.
     training_config = config["training"]
     callback_on_best = StopTrainingOnRewardThreshold(
-        reward_threshold=training_config["reward_threshold"],
+        reward_threshold=training_config["eval"]["reward_threshold"],
         verbose=1,
     )
     eval_callback = EvalCallback(
         env,
         callback_on_new_best=callback_on_best,
         verbose=1,
-        **training_config.get("eval", {}),
+        eval_freq=training_config["eval"]["eval_freq"],
+        n_eval_episodes=training_config["eval"]["n_eval_episodes"],
     )
 
     date_str = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
