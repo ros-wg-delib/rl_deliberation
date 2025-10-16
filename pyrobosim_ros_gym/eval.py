@@ -11,18 +11,44 @@
 import argparse
 from typing import Dict, List
 
-from gymnasium.spaces import Discrete
 import rclpy
+from gymnasium.spaces import Discrete
 from rclpy.node import Node
 
-from pyrobosim_ros_gym.envs import get_env_by_name
+from pyrobosim_ros_gym.envs import available_envs_w_subtype, get_env_by_name
 from pyrobosim_ros_gym.policies import model_and_env_type_from_path
+
+
+class ManualPolicy:
+    """A policy that allows manual control of the robot."""
+
+    def __init__(self, action_space):
+        print("Welcome. You are the agent now!")
+        self.action_space = action_space
+
+    def predict(self, observation, deterministic):
+        # print(f"Observation: {observation}")
+        # print(f"Action space: {self.action_space}")
+        possible_actions = list(range(self.action_space.n))
+        while True:
+            try:
+                action = int(input(f"Enter desired action from {possible_actions}: "))
+                if action in possible_actions:
+                    return action, None
+                else:
+                    raise RuntimeError(f"Action {action} not in {possible_actions}.")
+            except ValueError:
+                raise RuntimeError("Invalid input, please enter an integer.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--model", type=str, help="The name of the model to evaluate.")
     parser.add_argument(
-        "--model", required=True, help="The name of the model to evaluate."
+        "--manual-env",
+        type=str,
+        help="Use manual control for the environment.",
+        choices=available_envs_w_subtype(),
     )
     parser.add_argument(
         "--num-episodes",
@@ -39,15 +65,31 @@ if __name__ == "__main__":
     rclpy.init()
     node = Node("pyrobosim_ros_env")
 
-    # Load the model and environment
-    model, env_type = model_and_env_type_from_path(args.model)
-    env = get_env_by_name(
-        env_type,
-        node,
-        max_steps_per_episode=15,
-        realtime=args.realtime,
-        discrete_actions=isinstance(model.action_space, Discrete),
-    )
+    assert (args.manual_env is not None) ^ (
+        args.model is not None
+    ), "Exactly one of --manual-env-control or --model must be set."
+
+    if args.manual_env is not None:
+        env = get_env_by_name(
+            args.manual_env,
+            node,
+            max_steps_per_episode=100,
+            realtime=True,
+            discrete_actions=True,
+        )
+        model = ManualPolicy(env.action_space)
+        args.num_episodes = 1  # Only one episode for manual control
+        print("warning: Manual control enabled, only one episode will be run.")
+    else:
+        # Load the model and environment
+        model, env_type = model_and_env_type_from_path(args.model)
+        env = get_env_by_name(
+            env_type,
+            node,
+            max_steps_per_episode=15,
+            realtime=True,
+            discrete_actions=isinstance(model.action_space, Discrete),
+        )
 
     # Evaluate the model for some steps
     num_successful_episodes = 0
