@@ -71,7 +71,7 @@ jobs:
       - run: cp slides/* .
       - uses: maxheld83/pandoc@v2.1.0
         with:
-          args: "-t beamer main.md -o slides.pdf"
+          args: "-t beamer main.md -o slides.pdf --listings"
       - uses: actions/upload-artifact@main
         with:
           name: slides.pdf
