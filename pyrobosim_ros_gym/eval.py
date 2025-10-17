@@ -33,7 +33,7 @@ class ManualPolicy:
         possible_actions = list(range(self.action_space.n))
         while True:
             try:
-                action = int(input(f"Enter desired action from {possible_actions}: "))
+                action = int(input(f"Enter action from {possible_actions}: "))
                 if action in possible_actions:
                     return action, None
                 else:
