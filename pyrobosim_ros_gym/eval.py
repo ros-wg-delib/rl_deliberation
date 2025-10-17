@@ -9,11 +9,12 @@
 """Evaluates a trained RL policy."""
 
 import argparse
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import rclpy
 from gymnasium.spaces import Discrete
 from rclpy.node import Node
+from stable_baselines3.common.base_class import BaseAlgorithm
 
 from pyrobosim_ros_gym.envs import available_envs_w_subtype, get_env_by_name
 from pyrobosim_ros_gym.policies import model_and_env_type_from_path
@@ -77,7 +78,9 @@ if __name__ == "__main__":
             realtime=True,
             discrete_actions=True,
         )
-        model = ManualPolicy(env.action_space)
+        model = ManualPolicy(
+            env.action_space
+        )  # type: Union[ManualPolicy, BaseAlgorithm]
         args.num_episodes = 1  # Only one episode for manual control
         print("warning: Manual control enabled, only one episode will be run.")
     else:
