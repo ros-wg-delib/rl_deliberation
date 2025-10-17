@@ -12,14 +12,22 @@ date:
 logo:
 - ros-wg-delib.png
 aspectratio: 169
+fontsize: 9pt
+colorlinks: true
 header-includes:
-- \hypersetup{colorlinks=true}
-- \setbeamersize{sidebar width left=0.175\paperwidth}
-pandoc-beamer-block:
-- classes: [info]
-- classes: [alert]
-  type: alert
+  - \usepackage{listings}
+  - \usepackage{xcolor}
+  - \lstset{
+      basicstyle=\ttfamily\small,
+      backgroundcolor=\color{gray!10},
+      keywordstyle=\color{blue},
+      stringstyle=\color{orange},
+      commentstyle=\color{gray},
+      showstringspaces=false
+    }
 ---
+<!-- Build with `pandoc -t beamer main.md -o main.pdf --listings` -->
+<!-- https://pandoc.org/MANUAL.html#variables-for-beamer-slides -->
 
 # Agenda
 
@@ -141,22 +149,21 @@ Then, in another terminal, run:
 
 ```bash
 pixi run eval
---manual-env-control
-GreenhousePlain
+--manual-env GreenhousePlain
 ```
-
----
 
 ```plain
-Enter desired action from [0, 1]:
+Enter action from [0, 1]:
 ```
 
-Now you can choose between
+On this prompt, you can choose:
 
-- `0`: Move forward without watering
-- `1`: Water the plant and move to the next plant
+- __0__: Move forward without watering, and
+- __1__: Water the plant and move on.
 
-But be __careful__: If you water the evil plant (red), you will be eaten.
+But be __careful__: If you water the evil plant _(red)_, you will be eaten.
+
+![Evil Plant \tiny flickr/Tippitiwichet](venus_flytrap_src_wikimedia_commons_Tippitiwichet.jpg){width=80px}
 
 ::::
 
