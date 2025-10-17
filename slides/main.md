@@ -26,12 +26,11 @@ header-includes:
       showstringspaces=false
     }
 ---
-<!-- Build with `pandoc -t beamer main.md -o main.pdf --listings` -->
-<!-- https://pandoc.org/MANUAL.html#variables-for-beamer-slides -->
 
 # Agenda
 
-<!-- ## Schedule -->
+<!-- Build with `pandoc -t beamer main.md -o main.pdf --listings` -->
+<!-- https://pandoc.org/MANUAL.html#variables-for-beamer-slides -->
 
 | __Time__       | __Topic__                                               |
 |----------------|---------------------------------------------------------|
@@ -57,7 +56,7 @@ header-includes:
     curl -fsSL https://pixi.sh/install.sh | sh
     ```
 
-    (or \href{https://pixi.sh/latest/installation}{\texttt{https://pixi.sh/latest/installation}} – recommend autocompletion!)
+    (or \href{<https://pixi.sh/latest/installation}{\texttt{https://pixi.sh/latest/installation}}> – recommend autocompletion!)
 
 3. Build the project:
 
@@ -133,8 +132,8 @@ where $\gamma$ is a discount factor. -->
 Start by exploring the environment.
 
 ```bash
-pixi run start_world --env
-GreenhousePlain
+pixi run start_world --env \
+  GreenhousePlain
 ```
 
 ![Greenhouse environment](greenhouse.png){height=100px}
@@ -148,8 +147,8 @@ You are a robot that has to water plants in a greenhouse.
 Then, in another terminal, run:
 
 ```bash
-pixi run eval
---manual-env GreenhousePlain
+pixi run eval \
+  --manual-env GreenhousePlain
 ```
 
 ```plain
@@ -158,7 +157,7 @@ Enter action from [0, 1]:
 
 On this prompt, you can choose:
 
-- __0__: Move forward without watering, and
+- __0__: Move forward without watering, or
 - __1__: Water the plant and move on.
 
 But be __careful__: If you water the evil plant _(red)_, you will be eaten.
@@ -211,7 +210,6 @@ $$
 G_t = \sum_{k=0}^{\infty} \gamma^k R_{t+k}
 $$
 
-
 # Introduction: Learning
 
 How do we learn a good policy?
@@ -235,9 +233,9 @@ $$v_{\pi}(S_t) \leftarrow (1 - \alpha) v_{\pi}(S_t) + \alpha (R_{t+1} + \gamma v
 
 where
 
-* $v_{\pi}(S_t)$ is the expected value of state $S_t$
-* $R_{t+1} + \gamma v_{\pi}(S_{t+1})$ is the actual reward obtained at $S_t$ plus the expected value of the next state $S_{t+1}$
-* $R_{t+1} + \gamma v_{\pi}(S_{t+1}) - v_{\pi}(S_t)$ is the __TD error__.
+- $v_{\pi}(S_t)$ is the expected value of state $S_t$
+- $R_{t+1} + \gamma v_{\pi}(S_{t+1})$ is the actual reward obtained at $S_t$ plus the expected value of the next state $S_{t+1}$
+- $R_{t+1} + \gamma v_{\pi}(S_{t+1}) - v_{\pi}(S_t)$ is the __TD error__.
 
 \footnotesize (a variant using the __state-action value function__ $Q_{\pi}(s, a)$ is known as __Q-learning__.)
 
@@ -248,7 +246,6 @@ where
 Learns a Q-function $Q(s, a)$.
 Introduced _experience replay_ (off-policy) and _target networks_.
 [Mnih et al., 2013](https://arxiv.org/abs/1312.5602), [Mnih et al., 2015](https://www.nature.com/articles/nature14236), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/dqn.html)
-
 
 ## \footnotesize Advantage Actor-Critic (A2C)
 
@@ -305,18 +302,18 @@ pixi run policy_node --model MyModel.pt
 
 Introduce some of the main points in this slide
 
-* Hyperparameter tuning and scaling up experiments
-* Deploying real policies to ROS
-* Comparing RL for control with RL for deliberation
+- Hyperparameter tuning and scaling up experiments
+- Deploying real policies to ROS
+- Comparing RL for control with RL for deliberation
 
 # Resources
 
 ## RL theory
 
-* Sutton + Barto Textbook: http://incompleteideas.net/book/the-book-2nd.html
-* David Silver Lectures: https://davidstarsilver.wordpress.com/teaching/
+- Sutton + Barto Textbook: <http://incompleteideas.net/book/the-book-2nd.html>
+- David Silver Lectures: <https://davidstarsilver.wordpress.com/teaching/>
 
 ## Deliberation
 
-* ROS Deliberation Community Group: https://github.com/ros-wg-delib
-* Workshop Repo: https://github.com/ros-wg-delib/rl_deliberation
+- ROS Deliberation Community Group: <https://github.com/ros-wg-delib>
+- Workshop Repo: <https://github.com/ros-wg-delib/rl_deliberation>
