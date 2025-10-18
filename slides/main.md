@@ -116,7 +116,29 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 :::
 
-# Example 1: You are the agent
+# RL Software in this Workshop
+
+::: columns
+
+:::: column
+
+![Gymnasium \tiny](media/gymnasium.png)
+
+\footnotesize Represents environments for RL <https://gymnasium.farama.org/>
+
+::::
+
+:::: column
+
+![Stable Baselines 3 (SB3)](media/sb3.png)
+
+\footnotesize RL algorithm implementations in PyTorch <https://github.com/DLR-RM/stable-baselines3>
+
+::::
+
+:::
+
+# Exercise 1: You are the agent
 
 ::: columns
 
@@ -230,7 +252,78 @@ where
 - $R_{t+1} + \gamma v_{\pi}(S_{t+1})$ is the actual reward obtained at $S_t$ plus the expected value of the next state $S_{t+1}$
 - $R_{t+1} + \gamma v_{\pi}(S_{t+1}) - v_{\pi}(S_t)$ is the __TD error__.
 
-\footnotesize (a variant using the __state-action value function__ $Q_{\pi}(s, a)$ is known as __Q-learning__.)
+\small (a variant using the __state-action value function__ $Q_{\pi}(s, a)$ is known as __Q-learning__.)
+
+# Classic RL: Tabular Methods
+
+RL began with known MDPs + discrete states/actions, so $v_{\pi}(s)$ or $q_{\pi}(s,a)$ are __tables__.
+
+![Grid world \tiny ([David Silver](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/grid-world.png){width=180px}
+
+Can use __dynamic programming__ to iterate through the entire environment and converge on an optimal policy.
+
+::: columns
+
+:::: column
+
+![Value iteration \tiny ([David Silver](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/value-iteration.png){width=80px}
+
+::::
+
+:::: column
+
+![Policy iteration \tiny ([David Silver](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/policy-iteration.png){width=80px}
+
+::::
+
+:::
+
+# Model-Free Reinforcement Learning
+
+If the state-action space is too large, need to perform __rollouts__ to gain experience.
+
+Key: Balancing __exploitation__ and __exploration__!
+
+![Model-free RL methods \tiny ([David Silver](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=420px}
+
+
+# Deep Reinforcement Learning
+
+When the observation space is too large (or even continuous), a tabular method does not work.
+
+Need a different function approximator -- *...why not a neural network?*
+
+![Deep Q-Network \tiny ([Mnih et al. (2015)](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=300px}
+
+__Off-policy__: Can train on old experiences from a *replay buffer*.
+
+# Actor-Critic / Policy Gradient Methods
+
+DQN only works for discrete actions, so what about continuous actions?
+
+::: columns
+
+:::: column
+
+- __Critic__ approximates value function. Trained via TD learning.
+
+- __Actor__ outputs actions (i.e., the policy). Trained via __policy gradient__, backpropagated from critic loss.
+
+Initial methods were __on-policy__ -- can only train on the latest version of the policy with current experiences.
+Example: Proximal Policy Optimization (PPO) ([Schulman et al., 2017](https://arxiv.org/abs/1707.06347)).
+
+Other approaches train actor and critic at different time scales to allow off-policy.
+Example: Soft Actor-Critic (SAC) ([Haarnoja et al., 2018](https://arxiv.org/abs/1801.01290)).
+
+::::
+
+:::: column
+
+![Actor-Critic methods <br> \tiny ([Sutton + Barto (2020)](http://incompleteideas.net/book/the-book-2nd.html))](media/actor-critic.png){width=180px}
+
+::::
+
+:::
 
 # Reference: Reinforcement Learning Algorithms
 
@@ -255,49 +348,91 @@ Optimize policy directly. Uses a _clipped surrogate objective_ to ensure stabili
 Off-policy algorithm encouraging exploration with _entropy_ term.
 [Haarnoja et al., 2018](https://arxiv.org/abs/1801.01290), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)
 
-# The Greenhouse Environment
+# Exercise 2: Run with a Random Agent
 
-pixi run start_world with GreenhousePlain
+```bash
+pixi run start_world --env GreenhousePlain
 
-Run with a random agent
+pixi run eval --realtime --model \
+  pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt
+```
 
-Explore the code to see how the gymnasium env is set up (reset + step)
+# Exercise 3: Training Your First Agent
 
-# Training Your First Agent
+```bash
+pixi run train --model-type DQN --discrete-actions --realtime
+```
 
-pixi run train
+... this is going to take a while.
+Let's speed things up.
 
-… this is going to take a while
+```bash
+pixi run start_world --env GreenhousePlain --headless
 
-start the model headless and run as quickly as possible instead!
+pixi run train --model-type DQN --discrete-actions
+```
 
-Seeding is important for reproducibility!
+NOTE: Seeding is important! We are running with `--seed 42` by default.
 
 # Visualizing Training Progress
 
 Launch Tensorboard and make sense of it
 
+```bash
+pixi run train --model-type DQN --discrete-actions --log
+
 pixi run tensorboard
+```
 
 # Evaluating Your Agent
 
-pixi run eval --model MyModel.pt
+```bash
+pixi run eval --model <path_to_your_model>.pt --num-episodes 10
+```
 
-# Train More Complicated Environment Variations
+# Exercise 4: Train More Complicated Environment Variations
 
 Introduce GreenhouseRandom and GreenhouseBattery subtypes
 
 # Deploying a Trained Policy as a ROS Node
 
-pixi run policy_node --model MyModel.pt
+1. Start the node.
 
-# Discussion: ROS, RL, and Deliberation
+```bash
+pixi run policy_node --model <path_to_your_model>.pt
+```
 
-Introduce some of the main points in this slide
+2. Next, open up an interactive shell.
 
-- Hyperparameter tuning and scaling up experiments
-- Deploying real policies to ROS
-- Comparing RL for control with RL for deliberation
+```bash
+pixi shell
+```
+
+3. In the shell, send an action goal to run the policy to completion!
+
+```bash
+ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
+```
+
+# Discussion: Scaling up Learning
+
+- Parallel simulation
+- Running with multiple seeds and reporting intervals
+- Hyperparameter tuning
+- Curriculum learning
+
+# Discussion: Deploying policies to ROS
+
+- Python: PyTorch
+- C++: ONNX + ros2_control
+
+# Discussion: RL for Deliberation
+
+- Much state of the art RL is for fast, low-level control policies (e.g. locomotion)
+  - Requires sim-to-real training because on-robot RL is hard / unsafe.
+- How does this change for deliberation?
+  - Facilitates on-robot RL: train high-level decision making, but there is a safety layer below.
+  - What kinds of high-level decisions can/should be learned?
 
 # Resources
 

@@ -90,7 +90,7 @@ if __name__ == "__main__":
             env_type,
             node,
             max_steps_per_episode=15,
-            realtime=True,
+            realtime=args.realtime,
             discrete_actions=isinstance(model.action_space, Discrete),
         )
 
