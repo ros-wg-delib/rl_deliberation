@@ -68,14 +68,13 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-      - run: cp slides/* .
       - uses: maxheld83/pandoc@v2.1.0
         with:
-          args: "-t beamer main.md -o slides.pdf --listings"
+          args: "-t beamer slides/main.md -o slides/slides.pdf --listings"
       - uses: actions/upload-artifact@main
         with:
           name: slides.pdf
-          path: slides.pdf
+          path: slides/slides.pdf
       - name: Slides as release
         uses: ncipollo/release-action@v1
         with:
