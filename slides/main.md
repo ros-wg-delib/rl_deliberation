@@ -10,7 +10,7 @@ theme:
 date:
 - ROSCon 2025 / October 27, 2025
 logo:
-- ros-wg-delib.png
+- media/ros-wg-delib.png
 aspectratio: 169
 fontsize: 9pt
 colorlinks: true
@@ -56,7 +56,7 @@ header-includes:
     curl -fsSL https://pixi.sh/install.sh | sh
     ```
 
-    (or \href{<https://pixi.sh/latest/installation}{\texttt{https://pixi.sh/latest/installation}}> – recommend autocompletion!)
+    (or \href{https://pixi.sh/latest/installation}{\texttt{https://pixi.sh/latest/installation}} – recommend autocompletion!)
 
 3. Build the project:
 
@@ -89,7 +89,7 @@ Basic model:
 ::::
 
 :::: column
-![Agent Environment Interaction](agent-env.drawio.png)
+![Agent Environment Interaction](media/agent-env.drawio.png)
 
 See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://incompleteideas.net/book/RLbook2020.pdf)
 ::::
@@ -108,17 +108,10 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 - Environment responds with a new state $S_{t+1}$ and a reward $R_{t+1}$
 - Based on that $S_t$ the agent selects the __next action__ $A_{t+1}$
 
-<!-- ---
-
-The goal of this _learning problem_ is to maximize the __cumulative reward__ over time:
-$$
-R_t = \sum_{k=0}^{\infty} \gamma^k r_{t+k+1},
-$$
-where $\gamma$ is a discount factor. -->
 ::::
 
 :::: column
-![Agent Environment Interaction](agent-env-sym.drawio.png)
+![Agent Environment Interaction](media/agent-env-sym.drawio.png)
 ::::
 
 :::
@@ -136,7 +129,7 @@ pixi run start_world --env \
   GreenhousePlain
 ```
 
-![Greenhouse environment](greenhouse.png){height=100px}
+![Greenhouse environment](media/greenhouse.png){height=100px}
 
 You are a robot that has to water plants in a greenhouse.
 
@@ -162,7 +155,7 @@ On this prompt, you can choose:
 
 But be __careful__: If you water the evil plant _(red)_, you will be eaten.
 
-![Evil Plant \tiny flickr/Tippitiwichet](venus_flytrap_src_wikimedia_commons_Tippitiwichet.jpg){width=80px}
+![Evil Plant \tiny flickr/Tippitiwichet](media/venus_flytrap_src_wikimedia_commons_Tippitiwichet.jpg){width=80px}
 
 ::::
 
