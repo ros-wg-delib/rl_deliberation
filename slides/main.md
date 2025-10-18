@@ -1,6 +1,5 @@
 ---
 title:
-
 - Reinforcement Learning for Deliberation in ROS 2
 author:
 - Christian Henkel
@@ -25,6 +24,8 @@ header-includes:
       commentstyle=\color{gray},
       showstringspaces=false
     }
+  - \setbeamertemplate{navigation symbols}{}
+  - \setbeamertemplate{footline}{\hfill\insertframenumber{} / \inserttotalframenumber\hfill}
 ---
 
 # Agenda
