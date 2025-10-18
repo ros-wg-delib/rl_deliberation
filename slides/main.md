@@ -25,7 +25,7 @@ header-includes:
       showstringspaces=false
     }
   - \setbeamertemplate{navigation symbols}{}
-  - \setbeamertemplate{footline}{\hfill\insertframenumber{} / \inserttotalframenumber\hfill}
+  - \setbeamertemplate{footline}{\small \hfill\insertframenumber{} / \inserttotalframenumber\hfill}
 ---
 
 # Agenda
