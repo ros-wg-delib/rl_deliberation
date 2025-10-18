@@ -251,6 +251,7 @@ where
 - $v_{\pi}(S_t)$ is the expected value of state $S_t$
 - $R_{t+1} + \gamma v_{\pi}(S_{t+1})$ is the actual reward obtained at $S_t$ plus the expected value of the next state $S_{t+1}$
 - $R_{t+1} + \gamma v_{\pi}(S_{t+1}) - v_{\pi}(S_t)$ is the __TD error__.
+- $\alpha$ is the __learning rate__.
 
 \small (a variant using the __state-action value function__ $Q_{\pi}(s, a)$ is known as __Q-learning__.)
 
@@ -289,7 +290,7 @@ Key: Balancing __exploitation__ and __exploration__!
 
 # Deep Reinforcement Learning
 
-When the observation space is too large (or even continuous), a tabular method does not work.
+When the observation space is too large (or worse, continuous), tabular methods no longer work.
 
 Need a different function approximator -- *...why not a neural network?*
 
@@ -415,7 +416,7 @@ pixi run tensorboard
 
 ![TensorBoard](media/tensorboard.png){width=200px}
 
-# Evaluating Your Agent
+# Evaluating Your Trained Agent
 
 Once you have your trained model, you can evaluate it against the simulator.
 
@@ -525,3 +526,5 @@ How does this change for deliberation applications?
 
 - ROS Deliberation Community Group: <https://github.com/ros-wg-delib>
 - Workshop Repo: <https://github.com/ros-wg-delib/rl_deliberation>
+
+![Happy RL journey!](media/twitter-post.png){height=100px}
