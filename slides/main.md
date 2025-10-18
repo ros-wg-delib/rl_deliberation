@@ -258,7 +258,7 @@ where
 
 RL began with known MDPs + discrete states/actions, so $v_{\pi}(s)$ or $q_{\pi}(s,a)$ are __tables__.
 
-![Grid world \tiny ([David Silver](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/grid-world.png){width=180px}
+![Grid world \tiny ([Silver, 2025](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/grid-world.png){width=180px}
 
 Can use __dynamic programming__ to iterate through the entire environment and converge on an optimal policy.
 
@@ -266,13 +266,13 @@ Can use __dynamic programming__ to iterate through the entire environment and co
 
 :::: column
 
-![Value iteration \tiny ([David Silver](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/value-iteration.png){width=80px}
+![Value iteration \tiny ([Silver, 2025](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/value-iteration.png){width=80px}
 
 ::::
 
 :::: column
 
-![Policy iteration \tiny ([David Silver](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/policy-iteration.png){width=80px}
+![Policy iteration \tiny ([Silver, 2025](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/policy-iteration.png){width=80px}
 
 ::::
 
@@ -284,7 +284,7 @@ If the state-action space is too large, need to perform __rollouts__ to gain exp
 
 Key: Balancing __exploitation__ and __exploration__!
 
-![Model-free RL methods \tiny ([David Silver](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=420px}
+![Model-free RL methods \tiny ([Silver, 2025](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=420px}
 
 
 # Deep Reinforcement Learning
@@ -293,7 +293,7 @@ When the observation space is too large (or even continuous), a tabular method d
 
 Need a different function approximator -- *...why not a neural network?*
 
-![Deep Q-Network \tiny ([Mnih et al. (2015)](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=300px}
+![Deep Q-Network \tiny ([Mnih et al., 2015](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=300px}
 
 __Off-policy__: Can train on old experiences from a *replay buffer*.
 
@@ -319,7 +319,7 @@ Example: Soft Actor-Critic (SAC) ([Haarnoja et al., 2018](https://arxiv.org/abs/
 
 :::: column
 
-![Actor-Critic methods <br> \tiny ([Sutton + Barto (2020)](http://incompleteideas.net/book/the-book-2nd.html))](media/actor-critic.png){width=180px}
+![Actor-Critic methods \tiny ([Sutton + Barto, 2020](http://incompleteideas.net/book/the-book-2nd.html))](media/actor-critic.png){width=180px}
 
 ::::
 
@@ -357,82 +357,162 @@ pixi run eval --realtime --model \
   pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt
 ```
 
+![Greenhouse environment](media/greenhouse.png){height=150px}
+
+
 # Exercise 3: Training Your First Agent
 
+Start the world.
+
 ```bash
-pixi run train --model-type DQN --discrete-actions --realtime
+pixi run start_world --env GreenhousePlain
 ```
+
+Kick off training.
+
+```bash
+pixi run train --config greenhouse_env_config.yaml \
+  --env GreenhousePlain --algorithm DQN --discrete-actions \
+  --realtime
+```
+
+The `--config` file points to `pyrobosim_ros_gym/config/greenhouse_env_config.yaml`, which lets you easily set up different algorithms and training parameters.
+
+# Exercise 3: Training Your First Agent (For Real...)
 
 ... this is going to take a while.
 Let's speed things up.
 
 ```bash
+# Run simulation headless, i.e., without the GUI
 pixi run start_world --env GreenhousePlain --headless
 
-pixi run train --model-type DQN --discrete-actions
+# No "realtime" flag, i.e., run actions as fast as possible
+pixi run train --config greenhouse_env_config.yaml \
+  --env GreenhousePlain --algorithm DQN --discrete-actions
 ```
 
-NOTE: Seeding is important! We are running with `--seed 42` by default.
+__NOTE:__ Seeding the training run is important for reproducibility!
+
+We are running with `--seed 42` by default, but you can change it.
 
 # Visualizing Training Progress
 
-Launch Tensorboard and make sense of it
+Stable Baselines 3 has visualization support for [TensorBoard](https://www.tensorflow.org/tensorboard).
+
+By adding the `--log` argument, a log file will be written to the `train_logs` folder.
 
 ```bash
-pixi run train --model-type DQN --discrete-actions --log
+pixi run train --config greenhouse_env_config.yaml \
+  --env GreenhousePlain --algorithm DQN --discrete-actions --log
+```
 
+Open TensorBoard and follow the URL displayed (usually `http://localhost:6006/`).
+
+```bash
 pixi run tensorboard
 ```
 
+![TensorBoard](media/tensorboard.png){width=200px}
+
 # Evaluating Your Agent
+
+Once you have your trained model, you can evaluate it against the simulator.
 
 ```bash
 pixi run eval --model <path_to_your_model>.pt --num-episodes 10
 ```
 
+By default, this will run just like training (as quickly as possible).
+
+You can add the `--realtime` flag to slow things down to "real-time" so you can visually inspect the results.
+
+![Example evaluation results](media/eval-results.png){width=240px}
+
 # Exercise 4: Train More Complicated Environment Variations
 
-Introduce GreenhouseRandom and GreenhouseBattery subtypes
+Training the `GreenhousePlain` environment is easy because the environment is *deterministic*; the plants are always in the same locations.
+
+For harder environments, you may want to switch algorithms (e.g., `PPO` or `SAC`).
+
+::: columns
+
+:::: column
+
+![`GreenhouseRandom` environment](media/greenhouse-random.png){width=120px}
+
+Plants are now spawned in random locations -- but only one per table.
+
+::::
+
+::: column
+
+![`GreenhouseBattery` environment](media/greenhouse-battery.png){width=120px}
+
+Watering costs 49% battery -- must recharge after watering twice.
+
+Charging is a new action (id `3`).
+
+::::
+
+:::
 
 # Deploying a Trained Policy as a ROS Node
 
-1. Start the node.
+1. Start an environment of your choice.
+
+```bash
+pixi run start_world --env GreenhouseRandom
+```
+
+2. Start the node with an appropriate model.
 
 ```bash
 pixi run policy_node --model <path_to_your_model>.pt
 ```
 
-2. Next, open up an interactive shell.
+3. Open an interactive shell.
 
 ```bash
 pixi shell
 ```
 
-3. In the shell, send an action goal to run the policy to completion!
+4. In the shell, send an action goal to run the policy to completion!
 
 ```bash
 ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 ```
 
-# Discussion: Scaling up Learning
+# Discussion 1: Scaling up Learning
 
 - Parallel simulation
-- Running with multiple seeds and reporting intervals
-- Hyperparameter tuning
 - Curriculum learning
 
-# Discussion: Deploying policies to ROS
+# Discussion 2: RL Experimentation
+
+- Running with multiple seeds and reporting intervals
+- Hyperparameter tuning
+
+# Discussion 3: Deploying policies to ROS
 
 - Python: PyTorch
 - C++: ONNX + ros2_control
 
-# Discussion: RL for Deliberation
+# Discussion 4: RL for Deliberation
 
-- Much state of the art RL is for fast, low-level control policies (e.g. locomotion)
-  - Requires sim-to-real training because on-robot RL is hard / unsafe.
-- How does this change for deliberation?
-  - Facilitates on-robot RL: train high-level decision making, but there is a safety layer below.
-  - What kinds of high-level decisions can/should be learned?
+## Background
+
+Much state of the art RL is for fast, low-level control policies (e.g., locomotion)
+
+- Requires sim-to-real training because on-robot RL is hard and/or unsafe.
+- Alternatives: fine-tune pretrained policies or train _residual_ policies.
+
+## Deliberation
+
+How does this change for deliberation applications?
+
+- Facilitates on-robot RL: train high-level decision making, with a safety layer below.
+- What kinds of high-level decisions can/should be learned?
 
 # Resources
 

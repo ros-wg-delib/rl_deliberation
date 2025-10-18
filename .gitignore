@@ -12,7 +12,7 @@ log/
 
 # Model checkpoints and logging
 train_logs/
-./*.pt
+**/*.pt
 
 # Slides
 slides/*.pdf
