@@ -260,7 +260,7 @@ where
 
 RL began with known MDPs + discrete states/actions, so $v_{\pi}(s)$ or $q_{\pi}(s,a)$ are __tables__.
 
-![Grid world \tiny ([Silver, 2025](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/grid-world.png){width=180px}
+![Grid world \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/grid-world.png){width=180px}
 
 Can use __dynamic programming__ to iterate through the entire environment and converge on an optimal policy.
 
@@ -268,13 +268,13 @@ Can use __dynamic programming__ to iterate through the entire environment and co
 
 :::: column
 
-![Value iteration \tiny ([Silver, 2025](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/value-iteration.png){width=80px}
+![Value iteration \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/value-iteration.png){width=80px}
 
 ::::
 
 :::: column
 
-![Policy iteration \tiny ([Silver, 2025](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/policy-iteration.png){width=80px}
+![Policy iteration \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/policy-iteration.png){width=80px}
 
 ::::
 
@@ -286,7 +286,7 @@ If the state-action space is too large, need to perform __rollouts__ to gain exp
 
 Key: Balancing __exploitation__ and __exploration__!
 
-![Model-free RL methods \tiny ([Silver, 2025](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=420px}
+![Model-free RL methods \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=420px}
 
 
 # Deep Reinforcement Learning
