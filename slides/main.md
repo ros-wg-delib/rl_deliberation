@@ -286,8 +286,7 @@ If the state-action space is too large, need to perform __rollouts__ to gain exp
 
 Key: Balancing __exploitation__ and __exploration__!
 
-![Model-free RL methods \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=420px}
-
+![Model-free RL methods \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=430px}
 
 # Deep Reinforcement Learning
 
@@ -295,7 +294,7 @@ When the observation space is too large (or worse, continuous), tabular methods 
 
 Need a different function approximator -- *...why not a neural network?*
 
-![Deep Q-Network \tiny ([Mnih et al., 2015](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=300px}
+![Deep Q-Network \tiny ([Mnih et al., 2015](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=280px}
 
 __Off-policy__: Can train on old experiences from a *replay buffer*.
 
@@ -321,7 +320,9 @@ Example: Soft Actor-Critic (SAC) ([Haarnoja et al., 2018](https://arxiv.org/abs/
 
 :::: column
 
-![Actor-Critic methods \tiny ([Sutton + Barto, 2020](http://incompleteideas.net/book/the-book-2nd.html))](media/actor-critic.png){width=180px}
+![Actor-Critic methods](media/actor-critic.png){width=180px}
+
+\center \tiny ([Sutton + Barto, 2020](http://incompleteideas.net/book/the-book-2nd.html))
 
 ::::
 
@@ -487,45 +488,164 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 # Discussion 1: Scaling up Learning
 
-- Parallel simulation
-- Curriculum learning
+## Parallel simulation
+
+::: columns
+
+:::: column
+
+- Simulations can be parallelized using multiple CPUs / GPUs.
+
+- SB3 defaults to using __vectorized environments__.
+
+- Other tools for parallel RL include [NVIDIA Isaac Lab](https://github.com/isaac-sim/IsaacLab) and [mjlab](https://github.com/mujocolab/mjlab).
+
+::::
+
+:::: column
+
+![[Rudin et al., 2021](https://leggedrobotics.github.io/legged_gym/)](media/rsl-parallel-sim.png){height=90px}
+
+::::
+
+:::
+
+## Curriculum learning
+
+::: columns
+
+:::: column
+
+- __Reward shaping__ by itself is very important to speed up learning.
+
+- Rather than solving the hardest problem from scratch, introduce a __curriculum__ of progressively harder tasks.
+
+::::
+
+:::: column
+
+![[Bengio et al., 2009](https://qmro.qmul.ac.uk/xmlui/bitstream/handle/123456789/15972/Bengio%2C%202009%20Curriculum%20Learning.pdf?sequence=1&isAllowed=y)](media/curriculum-learning.png){height=100px}
+
+::::
+
+:::
 
 # Discussion 2: RL Experimentation
 
-- Running with multiple seeds and reporting intervals
-- Hyperparameter tuning
+## RNG Seeds
+
+::: columns
+
+:::: column
+
+- It is possible to get a "lucky" (or "unlucky") seed when training.
+
+- Best (and expected) practice is to run multiple experiments and report intervals.
+
+::::
+
+:::: column
+
+![[Schulman et al., 2017](https://arxiv.org/abs/1707.06347)](media/ppo-graph.png){height=90px}
+
+::::
+
+:::
+
+## Hyperparameter Tuning
+
+::: columns
+
+:::: column
+
+- __Hyperparameter__: Any user-specified parameter for ML training.
+  - e.g., learning rate, batch/network size, reward weights, ...
+
+- Consider using automated tools (e.g., [Optuna](https://github.com/optuna/optuna)) to help you tune hyperparameters.
+
+::::
+
+:::: column
+
+![[Optuna Dashboard](https://github.com/optuna/optuna-dashboard)](media/optuna-dashboard.png){height=90px}
+
+::::
+
+:::
 
 # Discussion 3: Deploying policies to ROS
 
-- Python: PyTorch
-- C++: ONNX + ros2_control
+## Python
+
+::: columns
+
+:::: column
+
+- Can directly put PyTorch / Tensorflow / etc. models in a `rclpy` node.
+
+- Be careful with threading and CPU/GPU synchronization issues!
+
+::::
+
+:::: column
+
+![[Question from StackOverflow](https://discuss.pytorch.org/t/are-there-any-reasons-why-running-gpu-inference-in-a-thread-would-be-slower/204519)](media/pytorch-threading-question.png){height=90px}
+
+::::
+
+:::
+
+## C++
+
+::: columns
+
+:::: column
+
+- If you need performance, consider using C++ for inference.
+
+- Facilitated by tools like [ONNX Runtime](https://onnxruntime.ai/inference).
+
+- Can also put your policy inside a `ros2_control` controller for real-time capabilities.
+
+::::
+
+:::: column
+
+![[ONNX Runtime](https://onnxruntime.ai/inference)](media/onnx-runtime.png){height=100px}
+
+::::
+
+:::
 
 # Discussion 4: RL for Deliberation
 
 ## Background
 
-Much state of the art RL is for fast, low-level control policies (e.g., locomotion)
+__State of the art RL works for fast, low-level control policies (e.g., locomotion)__
 
 - Requires sim-to-real training because on-robot RL is hard and/or unsafe.
 - Alternatives: fine-tune pretrained policies or train _residual_ policies.
 
 ## Deliberation
 
-How does this change for deliberation applications?
+__How does this change for deliberation applications?__
 
-- Facilitates on-robot RL: train high-level decision making, with a safety layer below.
+- Facilitates on-robot RL: train high-level decision making, add a safety layer below.
+- Hierarchical RL dates back to the __options framework__ ([Sutton et al., 1998](http://incompleteideas.net/609%20dropbox/other%20readings%20and%20resources/Options.pdf)).
 - What kinds of high-level decisions can/should be learned?
+- What should this "safety layer" below look like?
 
 # Resources
 
-## RL theory
+## RL Theory
 
 - Sutton + Barto Textbook: <http://incompleteideas.net/book/the-book-2nd.html>
 - David Silver Lectures: <https://davidstarsilver.wordpress.com/teaching/>
 
-## Deliberation
+## ROS Deliberation
 
 - ROS Deliberation Community Group: <https://github.com/ros-wg-delib>
+  - Join our mailing list and ~monthly meetings!
 - Workshop Repo: <https://github.com/ros-wg-delib/rl_deliberation>
 
 ![Happy RL journey!](media/twitter-post.png){height=100px}
