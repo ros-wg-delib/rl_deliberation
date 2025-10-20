@@ -9,20 +9,28 @@
 """Evaluates a trained RL policy."""
 
 import argparse
-from typing import Dict, List
 
-from gymnasium.spaces import Discrete
 import rclpy
 from rclpy.node import Node
+from gymnasium.spaces import Discrete
+from stable_baselines3.common.base_class import BaseAlgorithm
 
-from pyrobosim_ros_gym.envs import get_env_by_name
-from pyrobosim_ros_gym.policies import model_and_env_type_from_path
+from pyrobosim_ros_gym.envs import available_envs_w_subtype, get_env_by_name
+from pyrobosim_ros_gym.policies import ManualPolicy, model_and_env_type_from_path
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--model", required=True, help="The name of the model to evaluate."
+        "--model",
+        type=str,
+        help="The name of the model to evaluate. Can be 'manual' for manual control.",
+    )
+    parser.add_argument(
+        "--env",
+        type=str,
+        help="The name of the environment to use if '--model manual' is selected.",
+        choices=available_envs_w_subtype(),
     )
     parser.add_argument(
         "--num-episodes",
@@ -40,21 +48,32 @@ if __name__ == "__main__":
     node = Node("pyrobosim_ros_env")
 
     # Load the model and environment
-    model, env_type = model_and_env_type_from_path(args.model)
-    env = get_env_by_name(
-        env_type,
-        node,
-        max_steps_per_episode=15,
-        realtime=args.realtime,
-        discrete_actions=isinstance(model.action_space, Discrete),
-    )
+    model: BaseAlgorithm | ManualPolicy
+    if args.model == "manual":
+        env = get_env_by_name(
+            args.env,
+            node,
+            max_steps_per_episode=15,
+            realtime=True,
+            discrete_actions=True,
+        )
+        model = ManualPolicy(env.action_space)
+    else:
+        model, env_type = model_and_env_type_from_path(args.model)
+        env = get_env_by_name(
+            env_type,
+            node,
+            max_steps_per_episode=15,
+            realtime=args.realtime,
+            discrete_actions=isinstance(model.action_space, Discrete),
+        )
 
     # Evaluate the model for some steps
     num_successful_episodes = 0
     reward_per_episode = [0.0 for _ in range(args.num_episodes)]
-    custom_metrics_store: Dict[str, List[float]] = {}
-    custom_metrics_episode_mean: Dict[str, float] = {}
-    custom_metrics_per_episode: Dict[str, List[float]] = {}
+    custom_metrics_store: dict[str, list[float]] = {}
+    custom_metrics_episode_mean: dict[str, float] = {}
+    custom_metrics_per_episode: dict[str, list[float]] = {}
     for i_e in range(args.num_episodes):
         print(f">>> Starting episode {i_e+1}/{args.num_episodes}")
         obs, _ = env.reset(seed=i_e + args.seed)
