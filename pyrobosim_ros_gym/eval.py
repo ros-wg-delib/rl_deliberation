@@ -9,46 +9,27 @@
 """Evaluates a trained RL policy."""
 
 import argparse
-from typing import Dict, List, Union
 
 import rclpy
-from gymnasium.spaces import Discrete
 from rclpy.node import Node
+from gymnasium.spaces import Discrete
 from stable_baselines3.common.base_class import BaseAlgorithm
 
 from pyrobosim_ros_gym.envs import available_envs_w_subtype, get_env_by_name
-from pyrobosim_ros_gym.policies import model_and_env_type_from_path
-
-
-class ManualPolicy:
-    """A policy that allows manual control of the robot."""
-
-    def __init__(self, action_space):
-        print("Welcome. You are the agent now!")
-        self.action_space = action_space
-
-    def predict(self, observation, deterministic):
-        # print(f"Observation: {observation}")
-        # print(f"Action space: {self.action_space}")
-        possible_actions = list(range(self.action_space.n))
-        while True:
-            try:
-                action = int(input(f"Enter action from {possible_actions}: "))
-                if action in possible_actions:
-                    return action, None
-                else:
-                    raise RuntimeError(f"Action {action} not in {possible_actions}.")
-            except ValueError:
-                raise RuntimeError("Invalid input, please enter an integer.")
+from pyrobosim_ros_gym.policies import ManualPolicy, model_and_env_type_from_path
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, help="The name of the model to evaluate.")
     parser.add_argument(
-        "--manual-env",
+        "--model",
         type=str,
-        help="Use manual control for the environment.",
+        help="The name of the model to evaluate. Can be 'manual' for manual control.",
+    )
+    parser.add_argument(
+        "--env",
+        type=str,
+        help="The name of the environment to use if '--model manual' is selected.",
         choices=available_envs_w_subtype(),
     )
     parser.add_argument(
@@ -66,40 +47,33 @@ if __name__ == "__main__":
     rclpy.init()
     node = Node("pyrobosim_ros_env")
 
-    assert (args.manual_env is not None) ^ (
-        args.model is not None
-    ), "Exactly one of --manual-env-control or --model must be set."
-
-    if args.manual_env is not None:
+    # Load the model and environment
+    model: BaseAlgorithm | ManualPolicy
+    if args.model == "manual":
         env = get_env_by_name(
-            args.manual_env,
+            args.env,
             node,
-            max_steps_per_episode=100,
+            max_steps_per_episode=15,
             realtime=True,
             discrete_actions=True,
         )
-        model = ManualPolicy(
-            env.action_space
-        )  # type: Union[ManualPolicy, BaseAlgorithm]
-        args.num_episodes = 1  # Only one episode for manual control
-        print("warning: Manual control enabled, only one episode will be run.")
+        model = ManualPolicy(env.action_space)
     else:
-        # Load the model and environment
         model, env_type = model_and_env_type_from_path(args.model)
         env = get_env_by_name(
             env_type,
             node,
             max_steps_per_episode=15,
-            realtime=True,
+            realtime=args.realtime,
             discrete_actions=isinstance(model.action_space, Discrete),
         )
 
     # Evaluate the model for some steps
     num_successful_episodes = 0
     reward_per_episode = [0.0 for _ in range(args.num_episodes)]
-    custom_metrics_store: Dict[str, List[float]] = {}
-    custom_metrics_episode_mean: Dict[str, float] = {}
-    custom_metrics_per_episode: Dict[str, List[float]] = {}
+    custom_metrics_store: dict[str, list[float]] = {}
+    custom_metrics_episode_mean: dict[str, float] = {}
+    custom_metrics_per_episode: dict[str, list[float]] = {}
     for i_e in range(args.num_episodes):
         print(f">>> Starting episode {i_e+1}/{args.num_episodes}")
         obs, _ = env.reset(seed=i_e + args.seed)

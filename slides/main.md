@@ -147,8 +147,8 @@ You are a robot that has to water plants in a greenhouse.
 Then, in another terminal, run:
 
 ```bash
-pixi run eval \
-  --manual-env GreenhousePlain
+pixi run eval --model manual \
+  --env GreenhousePlain
 ```
 
 ```plain
