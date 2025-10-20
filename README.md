@@ -153,13 +153,13 @@ Custom metric 'battery_level' over 1 episodes:
 
 While the environment is running (in headless mode if you prefer), you can train a model.
 
-### Choose model type
+### Choose algorithm type
 
 For example PPO
 
 <!--- skip-next --->
 ```bash
-pixi run train --env GreenhousePlain --config greenhouse_env_config.yaml --model-type PPO --log
+pixi run train --env GreenhousePlain --config greenhouse_env_config.yaml --algorithm PPO --log
 ```
 
 Or DQN.
@@ -167,7 +167,7 @@ Note that this needs the `--discrete-actions` flag.
 
 <!--- skip-next --->
 ```bash
-pixi run train --env GreenhousePlain --config greenhouse_env_config.yaml --model-type DQN --discrete-actions --log
+pixi run train --env GreenhousePlain --config greenhouse_env_config.yaml --algorithm DQN --discrete-actions --log
 ```
 
 Note that at the end of training, the model name and path will be printed in the terminal:

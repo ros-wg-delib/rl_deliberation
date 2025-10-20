@@ -68,11 +68,14 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-      - run: cp slides/* .
-      - uses: maxheld83/pandoc@v2.1.0
+      - name: Copy slides to main directory
+        run: cp -r slides/* .
+      - name: Set up pandoc
+        uses: maxheld83/pandoc@v2.1.0
         with:
           args: "-t beamer main.md -o slides.pdf --listings"
-      - uses: actions/upload-artifact@main
+      - name: Upload slides
+        uses: actions/upload-artifact@main
         with:
           name: slides.pdf
           path: slides.pdf

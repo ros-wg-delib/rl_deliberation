@@ -28,6 +28,12 @@ class ManualPolicy:
 
 
 def model_and_env_type_from_path(model_path: str) -> tuple[BaseAlgorithm, str]:
+    """
+    Loads a model and its corresponding environment type from its file path.
+
+    The models are of the form <env>_<model>[_<otherinfo>].pt.
+    For example, path/to/model/GreenhousePlain_DQN_seed42_2025_10_18_18_02_21.pt.
+    """
     # Validate the file path to be of the right form
     assert os.path.isfile(model_path), f"Model {model_path} must be a valid file."
     model_fname = os.path.basename(model_path)
@@ -36,18 +42,18 @@ def model_and_env_type_from_path(model_path: str) -> tuple[BaseAlgorithm, str]:
         len(model_name_parts) >= 2
     ), f"Model name {model_fname} must be of the form <env>_<model>[_<otherinfo>].pt"
     env_type = model_name_parts[0]
-    model_type = model_name_parts[1]
+    algorithm = model_name_parts[1]
 
     # Load the model
-    if model_type == "DQN":
+    if algorithm == "DQN":
         model: BaseAlgorithm = DQN.load(model_path, env=None)
-    elif model_type == "PPO":
+    elif algorithm == "PPO":
         model = PPO.load(model_path, env=None)
-    elif model_type == "SAC":
+    elif algorithm == "SAC":
         model = SAC.load(model_path, env=None)
-    elif model_type == "A2C":
+    elif algorithm == "A2C":
         model = A2C.load(model_path, env=None)
     else:
-        raise RuntimeError(f"Invalid model type: {model_type}")
+        raise RuntimeError(f"Invalid algorithm type: {algorithm}")
 
     return (model, env_type)

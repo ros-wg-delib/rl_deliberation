@@ -42,10 +42,10 @@ def get_args() -> argparse.Namespace:
         required=True,
     )
     parser.add_argument(
-        "--model-type",
+        "--algorithm",
         default="DQN",
         choices=["DQN", "PPO", "SAC", "A2C"],
-        help="The model type to train.",
+        help="The algorithm with which to train a model.",
     )
     parser.add_argument(
         "--discrete-actions",
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     # Train a model
     log_path = "train_logs" if args.log else None
-    if args.model_type == "DQN":
+    if args.algorithm == "DQN":
         dqn_config = config.get("training", {}).get("DQN", {})
         if "policy_kwargs" in dqn_config:
             policy_kwargs = dqn_config["policy_kwargs"]
@@ -120,7 +120,7 @@ if __name__ == "__main__":
             tensorboard_log=log_path,
             **dqn_config,
         )
-    elif args.model_type == "PPO":
+    elif args.algorithm == "PPO":
         ppo_config = config.get("training", {}).get("PPO", {})
         if "policy_kwargs" in ppo_config:
             policy_kwargs = ppo_config["policy_kwargs"]
@@ -132,7 +132,7 @@ if __name__ == "__main__":
             tensorboard_log=log_path,
             **ppo_config,
         )
-    elif args.model_type == "SAC":
+    elif args.algorithm == "SAC":
         sac_config = config.get("training", {}).get("SAC", {})
         if "policy_kwargs" in sac_config:
             policy_kwargs = sac_config["policy_kwargs"]
@@ -144,7 +144,7 @@ if __name__ == "__main__":
             tensorboard_log=log_path,
             **sac_config,
         )
-    elif args.model_type == "A2C":
+    elif args.algorithm == "A2C":
         a2c_config = config.get("training", {}).get("A2C", {})
         if "policy_kwargs" in a2c_config:
             policy_kwargs = a2c_config["policy_kwargs"]
@@ -157,8 +157,8 @@ if __name__ == "__main__":
             **a2c_config,
         )
     else:
-        raise RuntimeError(f"Invalid model type: {args.model_type}")
-    print(f"\nTraining with {args.model_type}...\n")
+        raise RuntimeError(f"Invalid algorithm type: {args.algorithm}")
+    print(f"\nTraining with {args.algorithm}...\n")
 
     # Train the model until it exceeds a specified reward threshold in evals.
     training_config = config["training"]
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     )
 
     date_str = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    log_name = f"{args.env}_{args.model_type}_{date_str}"
+    log_name = f"{args.env}_{args.algorithm}_seed{args.seed}_{date_str}"
     model.learn(
         total_timesteps=training_config["max_training_steps"],
         progress_bar=True,

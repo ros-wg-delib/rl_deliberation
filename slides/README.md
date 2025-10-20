@@ -1,9 +1,17 @@
 # Slides
 
-To build the slides with `pandoc`:
+The accompanying slides are built with [Pandoc](https://pandoc.org/) and `pdflatex`.
+
+You must first install these tools:
 
 ```bash
-pandoc -t beamer main.md -o slides.pdf
+sudo apt install pandoc texlive-latex-base texlive-latex-extra
+```
+
+Then, to build the slides:
+
+```bash
+pandoc -t beamer main.md -o slides.pdf --listings
 ```
 
 Refer to https://pandoc.org/MANUAL.html#variables-for-beamer-slides for useful information.
