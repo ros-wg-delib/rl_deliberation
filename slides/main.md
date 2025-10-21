@@ -67,7 +67,7 @@ header-includes:
 
 4. Run an example:
 
-    ```bash
+    ```plain
     pixi run start_world --env GreenhousePlain
     ```
 
@@ -131,7 +131,7 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 :::: column
 
-![Stable Baselines 3 (SB3)](media/sb3.png)
+![Stable Baselines3 (SB3)](media/sb3.png)
 
 \footnotesize RL algorithm implementations in PyTorch <https://github.com/DLR-RM/stable-baselines3>
 
@@ -145,16 +145,16 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 :::: column
 
+You are a robot that has to water plants in a greenhouse.
+
 Start by exploring the environment.
 
-```bash
+```plain
 pixi run start_world --env \
   GreenhousePlain
 ```
 
-![Greenhouse environment](media/greenhouse.png){height=100px}
-
-You are a robot that has to water plants in a greenhouse.
+![Greenhouse environment](media/greenhouse.png){height=120px}
 
 ::::
 
@@ -162,9 +162,11 @@ You are a robot that has to water plants in a greenhouse.
 
 Then, in another terminal, run:
 
-```bash
+```plain
 pixi run eval --model manual \
-  --env GreenhousePlain
+  --env GreenhousePlain \
+  --config \
+  greenhouse_env_config.yaml
 ```
 
 ```plain
@@ -310,6 +312,8 @@ DQN only works for discrete actions, so what about continuous actions?
 
 - __Actor__ outputs actions (i.e., the policy). Trained via __policy gradient__, backpropagated from critic loss.
 
+---
+
 Initial methods were __on-policy__ -- can only train on the latest version of the policy with current experiences.
 Example: Proximal Policy Optimization (PPO) ([Schulman et al., 2017](https://arxiv.org/abs/1707.06347)).
 
@@ -351,12 +355,19 @@ Optimize policy directly. Uses a _clipped surrogate objective_ to ensure stabili
 Off-policy algorithm encouraging exploration with _entropy_ term.
 [Haarnoja et al., 2018](https://arxiv.org/abs/1801.01290), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)
 
+# Which Algorithm to Choose?
+
+From the lead developer of SB3 (Antonin Raffin): <https://araffin.github.io/slides/rlvs-tips-tricks/>
+
+![Algorithm choice flowchart](media/sb3-algo-choice.png){width=300px}
+
 # Exercise 2: Run with a Random Agent
 
-```bash
+```plain
 pixi run start_world --env GreenhousePlain
 
-pixi run eval --realtime --model \
+pixi run eval --realtime \
+  --config greenhouse_env_config.yaml --model \
   pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt
 ```
 
@@ -367,13 +378,13 @@ pixi run eval --realtime --model \
 
 Start the world.
 
-```bash
+```plain
 pixi run start_world --env GreenhousePlain
 ```
 
 Kick off training.
 
-```bash
+```plain
 pixi run train --config greenhouse_env_config.yaml \
   --env GreenhousePlain --algorithm DQN --discrete-actions \
   --realtime
@@ -386,11 +397,15 @@ The `--config` file points to `pyrobosim_ros_gym/config/greenhouse_env_config.ya
 ... this is going to take a while.
 Let's speed things up.
 
-```bash
-# Run simulation headless, i.e., without the GUI
-pixi run start_world --env GreenhousePlain --headless
+Run simulation headless, i.e., without the GUI.
 
-# No "realtime" flag, i.e., run actions as fast as possible
+```plain
+pixi run start_world --env GreenhousePlain --headless
+```
+
+No "realtime" flag, i.e., run actions as fast as possible.
+
+```plain
 pixi run train --config greenhouse_env_config.yaml \
   --env GreenhousePlain --algorithm DQN --discrete-actions
 ```
@@ -401,18 +416,18 @@ We are running with `--seed 42` by default, but you can change it.
 
 # Visualizing Training Progress
 
-Stable Baselines 3 has visualization support for [TensorBoard](https://www.tensorflow.org/tensorboard).
+SB3 has visualization support for [TensorBoard](https://www.tensorflow.org/tensorboard).
 
 By adding the `--log` argument, a log file will be written to the `train_logs` folder.
 
-```bash
+```plain
 pixi run train --config greenhouse_env_config.yaml \
   --env GreenhousePlain --algorithm DQN --discrete-actions --log
 ```
 
 Open TensorBoard and follow the URL displayed (usually `http://localhost:6006/`).
 
-```bash
+```plain
 pixi run tensorboard
 ```
 
@@ -422,8 +437,9 @@ pixi run tensorboard
 
 Once you have your trained model, you can evaluate it against the simulator.
 
-```bash
-pixi run eval --model <path_to_your_model>.pt --num-episodes 10
+```plain
+pixi run eval --config greenhouse_env_config.yaml \
+  --model <path_to_your_model>.pt --num-episodes 10
 ```
 
 By default, this will run just like training (as quickly as possible).
@@ -460,33 +476,49 @@ Charging is a new action (id `3`).
 
 :::
 
+__Challenge__: Evaluate your policy on the `GreenhouseRandom` environment!
+
 # Deploying a Trained Policy as a ROS Node
 
 1. Start an environment of your choice.
 
-```bash
+```plain
 pixi run start_world --env GreenhouseRandom
 ```
 
 2. Start the node with an appropriate model.
 
-```bash
-pixi run policy_node --model <path_to_your_model>.pt
+```plain
+pixi run policy_node --model <path_to_your_model>.pt \
+  --config greenhouse_env_config.yaml
 ```
 
 3. Open an interactive shell.
 
-```bash
+```plain
 pixi shell
 ```
 
 4. In the shell, send an action goal to run the policy to completion!
 
-```bash
-ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
+```plain
+ros2 action send_goal /execute_policy \
+  rl_interfaces/ExecutePolicy {}
 ```
 
-# Discussion 1: Scaling up Learning
+# Discussion: When to use RL?
+
+Arguably, our simple greenhouse problem did not need RL.
+
+... but it was nice and educational... right?
+
+## General rules:
+
+- If easy to model, __engineer it by hand__ (e.g., controllers, behavior trees).
+- If difficult to model, but you can provide the answer (e.g., labels or demonstrations), consider __supervised learning__.
+- If difficult to model, and you cannot easily provide an answer, consider __reinforcement learning__.
+
+# Discussion: Scaling up Learning
 
 ## Parallel simulation
 
@@ -530,7 +562,7 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-# Discussion 2: RL Experimentation
+# Discussion: RL Experimentation
 
 ## RNG Seeds
 
@@ -573,7 +605,7 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-# Discussion 3: Deploying policies to ROS
+# Discussion: Deploying policies to ROS
 
 ## Python
 
@@ -617,7 +649,7 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-# Discussion 4: RL for Deliberation
+# Discussion: RL for Deliberation
 
 ## Background
 
@@ -641,6 +673,7 @@ __How does this change for deliberation applications?__
 
 - Sutton + Barto Textbook: <http://incompleteideas.net/book/the-book-2nd.html>
 - David Silver Lectures: <https://davidstarsilver.wordpress.com/teaching/>
+- Stable Baselines3 docs: <https://stable-baselines3.readthedocs.io/>
 
 ## ROS Deliberation
 
@@ -648,4 +681,4 @@ __How does this change for deliberation applications?__
   - Join our mailing list and ~monthly meetings!
 - Workshop Repo: <https://github.com/ros-wg-delib/rl_deliberation>
 
-![Happy RL journey!](media/twitter-post.png){height=100px}
+![Happy RL journey!](media/twitter-post.png){height=90px}

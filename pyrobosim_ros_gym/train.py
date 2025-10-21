@@ -10,9 +10,6 @@
 
 import argparse
 from datetime import datetime
-import importlib
-import os
-from typing import Any
 
 import rclpy
 from rclpy.node import Node
@@ -22,8 +19,8 @@ from stable_baselines3.common.callbacks import (
     StopTrainingOnRewardThreshold,
 )
 from stable_baselines3.common.base_class import BaseAlgorithm
-import yaml
 
+from pyrobosim_ros_gym import get_config
 from pyrobosim_ros_gym.envs import get_env_by_name, available_envs_w_subtype
 
 
@@ -38,7 +35,7 @@ def get_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--config",
-        help="Path to the training configuration YAML file.",
+        help="Path to the configuration YAML file.",
         required=True,
     )
     parser.add_argument(
@@ -66,31 +63,6 @@ def get_args() -> argparse.Namespace:
     return args
 
 
-def get_config(config_path: str) -> dict[str, Any]:
-    """Helper function to parse the configuration YAML file."""
-    config_path = args.config
-    if not os.path.isabs(config_path):
-        default_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "config"
-        )
-        config_path = os.path.join(default_path, config_path)
-    with open(config_path, "r") as file:
-        config = yaml.safe_load(file)
-
-    # Handle special case of policy_kwargs activation function needing to be a class instance.
-    for subtype in config.get("training", {}):
-        subtype_config = config["training"][subtype]
-        if not isinstance(subtype_config, dict):
-            continue
-        policy_kwargs = subtype_config.get("policy_kwargs", {})
-        if "activation_fn" in policy_kwargs:
-            module_name, class_name = policy_kwargs["activation_fn"].rsplit(".", 1)
-            module = importlib.import_module(module_name)
-            policy_kwargs["activation_fn"] = getattr(module, class_name)
-
-    return config
-
-
 if __name__ == "__main__":
     args = get_args()
     config = get_config(args.config)
@@ -104,6 +76,7 @@ if __name__ == "__main__":
         max_steps_per_episode=25,
         realtime=False,
         discrete_actions=args.discrete_actions,
+        reward_fn=config["training"].get("reward_fn"),
     )
 
     # Train a model

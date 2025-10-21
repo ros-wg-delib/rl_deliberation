@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2025, Sebastian Castro, Christian Henkel
+# All rights reserved.
+
+# This source code is licensed under the BSD 3-Clause License.
+# See the LICENSE file in the project root for license information.
+
 """Utilities for the banana test environment."""
 
 from pprint import pprint
@@ -29,6 +37,7 @@ class BananaEnv(PyRoboSimRosEnv):
         max_steps_per_episode,
         realtime,
         discrete_actions,
+        reward_fn=None,
         executor=None,
     ):
         """
@@ -40,18 +49,22 @@ class BananaEnv(PyRoboSimRosEnv):
             If -1, there is no limit to number of steps.
         :param realtime: Whether actions take time.
         :param discrete_actions: Choose discrete actions (needed for DQN).
+        :param reward_fn: Function that calculates the reward and termination criteria.
+            The first argument needs to be the environment itself.
+            The output needs to be a (reward, terminated, info) tuple.
+            If not specified, uses the default for that environment.
         :param executor: Optional ROS executor. It must be already spinning!
         """
         if sub_type == BananaEnv.sub_types.Pick:
-            reward_fn = banana_picked_reward
+            reward_fn = reward_fn or banana_picked_reward
             reset_validation_fn = None
             # eval_freq = 1000
         elif sub_type == BananaEnv.sub_types.Place:
-            reward_fn = banana_on_table_reward
+            reward_fn = reward_fn or banana_on_table_reward
             reset_validation_fn = None
             # eval_freq = 2000
         elif sub_type == BananaEnv.sub_types.PlaceNoSoda:
-            reward_fn = banana_on_table_avoid_soda_reward
+            reward_fn = reward_fn or banana_on_table_avoid_soda_reward
             reset_validation_fn = avoid_soda_reset_validation
             # eval_freq = 2000
         else:

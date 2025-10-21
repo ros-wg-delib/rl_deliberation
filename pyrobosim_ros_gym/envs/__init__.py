@@ -1,4 +1,12 @@
-from typing import List, Dict
+#!/usr/bin/env python3
+
+# Copyright (c) 2025, Sebastian Castro, Christian Henkel
+# All rights reserved.
+
+# This source code is licensed under the BSD 3-Clause License.
+# See the LICENSE file in the project root for license information.
+
+from typing import Any, Callable, List, Dict
 
 import rclpy
 from rclpy.executors import Executor
@@ -41,6 +49,7 @@ def get_env_by_name(
     max_steps_per_episode: int,
     realtime: bool,
     discrete_actions: bool,
+    reward_fn: Callable[..., Any],
     executor: Executor | None = None,
 ) -> PyRoboSimRosEnv:
     """
@@ -51,6 +60,7 @@ def get_env_by_name(
     :param max_steps_per_episode: Limit the steps (when to end the episode).
     :param realtime: Whether actions take time.
     :param discrete_actions: Choose discrete actions (needed for DQN).
+    :param reward_fn: The function used to compute the reward at each step.
     :param executor: Optional ROS executor. It must be already spinning!
     """
     base_class, sub_type = get_env_class_and_subtype_from_name(env_name)
@@ -60,5 +70,6 @@ def get_env_by_name(
         max_steps_per_episode,
         realtime,
         discrete_actions,
+        reward_fn,
         executor=executor,
     )
