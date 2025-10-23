@@ -24,14 +24,13 @@ header-includes:
       commentstyle=\color{gray},
       showstringspaces=false
     }
+  - \hypersetup{urlcolor=blue}
+  - \urlstyle{tt}
   - \setbeamertemplate{navigation symbols}{}
-  - \setbeamertemplate{footline}{\small \hfill\insertframenumber{} / \inserttotalframenumber\hfill}
+  - \setbeamertemplate{footline}{\small \hfill \insertframenumber{} / \inserttotalframenumber \hspace*{5pt}}
 ---
 
 # Agenda
-
-<!-- Build with `pandoc -t beamer main.md -o main.pdf --listings` -->
-<!-- https://pandoc.org/MANUAL.html#variables-for-beamer-slides -->
 
 | __Time__       | __Topic__                                               |
 |----------------|---------------------------------------------------------|
@@ -57,7 +56,7 @@ header-includes:
     curl -fsSL https://pixi.sh/install.sh | sh
     ```
 
-    (or \href{https://pixi.sh/latest/installation}{\texttt{https://pixi.sh/latest/installation}} – recommend autocompletion!)
+    (or <https://pixi.sh/latest/installation> – recommend autocompletion!)
 
 3. Build the project:
 
@@ -143,22 +142,23 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 ::: columns
 
-:::: column
+:::: {.column width=40%}
 
-Start by exploring the environment.
+Start the environment:
 
 ```bash
-pixi run start_world --env \
-  GreenhousePlain
+pixi run start_world  \
+  --env GreenhousePlain
 ```
 
 ![Greenhouse environment](media/greenhouse.png){height=100px}
 
+__Welcome__  
 You are a robot that has to water plants in a greenhouse.
 
 ::::
 
-:::: column
+:::: {.column width=60%}
 
 Then, in another terminal, run:
 
@@ -174,10 +174,12 @@ Enter action from [0, 1]:
 On this prompt, you can choose:
 
 - __0__: Move forward without watering, or
-- __1__: Water the plant and move on.
+- __1__: Water the plant and move on.  
 
-But be __careful__: If you water the evil plant _(red)_, you will be eaten.
+---
 
+But be __careful__: If you try to water the evil plant _(red)_, you will be eaten.
+  
 ![Evil Plant \tiny flickr/Tippitiwichet](media/venus_flytrap_src_wikimedia_commons_Tippitiwichet.jpg){width=80px}
 
 ::::
@@ -188,7 +190,7 @@ But be __careful__: If you water the evil plant _(red)_, you will be eaten.
 
 ## MDP
 
-We assume the environment to be a __Markov Decision Process (MDP)__.
+We assume the environment to follow a __Markov Decision Process (MDP)__ model.  
 An MDP is defined as $< \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}>$.
 
 - $s \in \mathcal{S}$ states and $a \in \mathcal{A}$ actions as above.
@@ -197,10 +199,12 @@ An MDP is defined as $< \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}>$.
 - $\mathcal{R}$ Reward Function: $R(s, a)$.
   - We will use this to motivate the agent to learn desired behavior.
 
+![(Pessimistic) Example MDP](media/mdp.drawio.png){height=90px}
+
 Implicit to the above is the __Markov Property__:
 
-The future state $S_{t+1}$ depends only on the current state $S_t$
-and action $A_t$, not on the sequence of events that preceded it.
+The future state $S_{t+1}$ depends only on the current state $S_t$ and action $A_t$,  
+not on the sequence of events that preceded it.
 
 # Introduction: Agent = Policy
 
@@ -228,7 +232,7 @@ $$
 
 # Introduction: Learning
 
-How do we learn a good policy?
+How do we learn a good policy $\pi: \mathcal{S} \rightarrow \mathcal{A}$?
 
 ## Bellman Equation
 
@@ -241,7 +245,13 @@ $$ = \sum_{a} \pi(a|s) \sum_{s', r} p(s', r | s, a) [r + \gamma v_{\pi}(s')]$$
 
 Here, $v_{\pi}(s)$ is known as the __state value function__.
 
-# Introduction: Temporal Differencing
+## Fundamental optimization goal
+
+So, we can forumlate the problem to find an optimal policy $\pi^*$ as an optimization problem:
+
+$$\pi^* = \arg\max_{\pi} v_{\pi}(s), \quad \forall s \in \mathcal{S}$$
+
+# RL Methods: Temporal Differencing
 
 The Bellman equation gives rise to __temporal differencing (TD)__ for training a policy.
 
@@ -256,7 +266,7 @@ where
 
 \small (a variant using the __state-action value function__ $Q_{\pi}(s, a)$ is known as __Q-learning__.)
 
-# Classic RL: Tabular Methods
+# RL Methods: Tabular Learning
 
 RL began with known MDPs + discrete states/actions, so $v_{\pi}(s)$ or $q_{\pi}(s,a)$ are __tables__.
 
@@ -280,7 +290,7 @@ Can use __dynamic programming__ to iterate through the entire environment and co
 
 :::
 
-# Model-Free Reinforcement Learning
+# RL Methods: Model-Free Reinforcement Learning
 
 If the state-action space is too large, need to perform __rollouts__ to gain experience.
 
@@ -288,17 +298,17 @@ Key: Balancing __exploitation__ and __exploration__!
 
 ![Model-free RL methods \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=430px}
 
-# Deep Reinforcement Learning
+# RL Methods: Deep Reinforcement Learning
 
 When the observation space is too large (or worse, continuous), tabular methods no longer work.
 
-Need a different function approximator -- *...why not a neural network?*
+Need a different function approximator -- _...why not a neural network?_
 
 ![Deep Q-Network \tiny ([Mnih et al., 2015](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=280px}
 
-__Off-policy__: Can train on old experiences from a *replay buffer*.
+__Off-policy__: Can train on old experiences from a _replay buffer_.
 
-# Actor-Critic / Policy Gradient Methods
+# RL Methods: Actor-Critic / Policy Gradient Methods
 
 DQN only works for discrete actions, so what about continuous actions?
 
@@ -362,7 +372,6 @@ pixi run eval --realtime --model \
 
 ![Greenhouse environment](media/greenhouse.png){height=150px}
 
-
 # Exercise 3: Training Your First Agent
 
 Start the world.
@@ -399,7 +408,7 @@ __NOTE:__ Seeding the training run is important for reproducibility!
 
 We are running with `--seed 42` by default, but you can change it.
 
-# Visualizing Training Progress
+# Exercise 3: Visualizing Training Progress
 
 Stable Baselines 3 has visualization support for [TensorBoard](https://www.tensorflow.org/tensorboard).
 
@@ -418,7 +427,7 @@ pixi run tensorboard
 
 ![TensorBoard](media/tensorboard.png){width=200px}
 
-# Evaluating Your Trained Agent
+# Exercise 3: Evaluating Your Trained Agent
 
 Once you have your trained model, you can evaluate it against the simulator.
 
@@ -434,7 +443,7 @@ You can add the `--realtime` flag to slow things down to "real-time" so you can 
 
 # Exercise 4: Train More Complicated Environment Variations
 
-Training the `GreenhousePlain` environment is easy because the environment is *deterministic*; the plants are always in the same locations.
+Training the `GreenhousePlain` environment is easy because the environment is _deterministic_; the plants are always in the same locations.
 
 For harder environments, you may want to switch algorithms (e.g., `PPO` or `SAC`).
 
@@ -460,7 +469,7 @@ Charging is a new action (id `3`).
 
 :::
 
-# Deploying a Trained Policy as a ROS Node
+# Application: Deploying a Trained Policy as a ROS Node
 
 1. Start an environment of your choice.
 
@@ -573,7 +582,7 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-# Discussion 3: Deploying policies to ROS
+# Discussion 3: Deploying Policies to ROS
 
 ## Python
 
@@ -635,7 +644,7 @@ __How does this change for deliberation applications?__
 - What kinds of high-level decisions can/should be learned?
 - What should this "safety layer" below look like?
 
-# Resources
+# Further Resources
 
 ## RL Theory
 

@@ -11,27 +11,29 @@
 import argparse
 
 import rclpy
-from rclpy.node import Node
 from gymnasium.spaces import Discrete
+from rclpy.node import Node
 from stable_baselines3.common.base_class import BaseAlgorithm
 
 from pyrobosim_ros_gym.envs import available_envs_w_subtype, get_env_by_name
 from pyrobosim_ros_gym.policies import ManualPolicy, model_and_env_type_from_path
 
+MANUAL_STR = "manual"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model",
         type=str,
-        help="The name of the model to evaluate. Can be 'manual' for manual control.",
+        help=f"The path of the model to evaluate. Can be '{MANUAL_STR}' for manual control.",
     )
     parser.add_argument(
         "--env",
         type=str,
-        help="The name of the environment to use if '--model manual' is selected.",
+        help=f"The name of the environment to use if '--model {MANUAL_STR}' is selected.",
         choices=available_envs_w_subtype(),
     )
+
     parser.add_argument(
         "--num-episodes",
         default=3,
@@ -44,12 +46,19 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # Ensure '--env' is provided if '--model' is 'manual'
+    if args.model == MANUAL_STR and not args.env:
+        parser.error(f"--env must be specified when --model is '{MANUAL_STR}'.")
+    if args.env and args.model is None:
+        print("--env is specified but --model is not. Defaulting to manual control.")
+        args.model = MANUAL_STR
+
     rclpy.init()
     node = Node("pyrobosim_ros_env")
 
     # Load the model and environment
     model: BaseAlgorithm | ManualPolicy
-    if args.model == "manual":
+    if args.model == MANUAL_STR:
         env = get_env_by_name(
             args.env,
             node,
