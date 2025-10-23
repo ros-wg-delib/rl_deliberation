@@ -27,7 +27,7 @@ header-includes:
   - \hypersetup{urlcolor=blue}
   - \urlstyle{tt}
   - \setbeamertemplate{navigation symbols}{}
-  - \setbeamertemplate{footline}{\small \hfill\insertframenumber{} / \inserttotalframenumber\hfill}
+  - \setbeamertemplate{footline}{\small \hfill \insertframenumber{} / \inserttotalframenumber \hspace*{5pt}}
 ---
 
 # Agenda
