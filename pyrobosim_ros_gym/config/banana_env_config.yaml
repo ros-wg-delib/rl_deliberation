@@ -1,7 +1,7 @@
 # Training configuration for the banana test environment
 
 training:
-  # General training algorithms
+  # General training options
   max_training_steps: 25000
 
   # Evaluations during training

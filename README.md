@@ -196,21 +196,21 @@ To run an evaluation, execute the following code.
 
 <!--- skip-next --->
 ```bash
-pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt --num-episodes 3 --realtime
+pixi run eval --config greenhouse_env_config.yaml --model GreenhousePlain_PPO_<timestamp>.pt --num-episodes 3 --realtime
 ```
 
 or to run more episodes as quickly as possible, launch your world with `--headless` and then execute.
 
 <!--- skip-next --->
 ```bash
-pixi run eval --model GreenhousePlain_PPO_<timestamp>.pt --num-episodes 20
+pixi run eval --config greenhouse_env_config.yaml --model GreenhousePlain_PPO_<timestamp>.pt --num-episodes 20
 ```
 
 You can also see your trained policy in action as a ROS node.
 
 <!--- skip-next --->
 ```bash
-pixi run policy_node --model GreenhousePlain_PPO_<timestamp>.pt
+pixi run policy_node --config greenhouse_env_config.yaml --model GreenhousePlain_PPO_<timestamp>.pt
 ```
 
 Then, in a separate terminal, you can send a goal.

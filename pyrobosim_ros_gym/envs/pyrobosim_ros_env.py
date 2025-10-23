@@ -1,5 +1,14 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2025, Sebastian Castro, Christian Henkel
+# All rights reserved.
+
+# This source code is licensed under the BSD 3-Clause License.
+# See the LICENSE file in the project root for license information.
+
 import time
 from enum import Enum
+from functools import partial
 
 import gymnasium as gym
 import rclpy
@@ -33,7 +42,7 @@ class PyRoboSimRosEnv(gym.Env):
         Instantiates a PyRoboSim ROS environment.
 
         :param node: The ROS node to use for creating clients.
-        :param reward_fn: Function that calculates the reward and termination criteria.
+        :param reward_fn: Function that calculates the reward (and possibly other outputs).
         :param reset_validation_fn: Function that calculates whether a reset is valid.
             If None (default), all resets are valid.
         :param max_steps_per_episode: Maximum number of steps before truncating an episode.
@@ -53,7 +62,12 @@ class PyRoboSimRosEnv(gym.Env):
         self.realtime = realtime
         self.max_steps_per_episode = max_steps_per_episode
         self.discrete_actions = discrete_actions
-        self.reward_fn = lambda goal, result: reward_fn(self, goal, result)
+
+        if reward_fn is None:
+            self.reward_fn = lambda _: 0.0
+        else:
+            self.reward_fn = partial(reward_fn, self)
+
         if reset_validation_fn is None:
             self.reset_validation_fn = lambda: True
         else:

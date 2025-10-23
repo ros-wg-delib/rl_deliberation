@@ -1,8 +1,13 @@
 # Training configuration for the greenhouse test environment
 
 training:
-  # General training algorithms
+  # General training options
   max_training_steps: 10000
+
+  # Reward function to use when stepping the environment
+  # reward_fn: pyrobosim_ros_gym.envs.greenhouse.sparse_reward  # Try this first
+  # reward_fn: pyrobosim_ros_gym.envs.greenhouse.dense_reward  # Try this second
+  reward_fn: pyrobosim_ros_gym.envs.greenhouse.full_reward  # End with this one
 
   # Evaluations during training
   #   Every eval_freq steps, n_eval_episodes episodes will be run.
