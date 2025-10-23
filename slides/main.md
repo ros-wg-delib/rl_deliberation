@@ -286,13 +286,14 @@ where
 - $R_{t+1} + \gamma v_{\pi}(S_{t+1}) - v_{\pi}(S_t)$ is the __TD error__.
 - $\alpha$ is the __learning rate__.
 
-\small (a variant using the __state-action value function__ $Q_{\pi}(s, a)$ is known as __Q-learning__.)
+\small (a variant using the __state-action value function__ $Q_{\pi}(s, a)$  
+\small is known as __Q-learning__.)
 
 ## Tabular Reinforcement Learning
 
 RL began with known MDPs + discrete states/actions, so $v_{\pi}(s)$ or $q_{\pi}(s,a)$ are __tables__.
 
-![Grid world \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/grid-world.png){width=180px}
+![Grid world \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/grid-world.png){width=150px}
 
 Can use __dynamic programming__ to iterate through the entire environment and converge on an optimal policy.
 
@@ -506,8 +507,8 @@ Kick off training.
 
 ```bash
 pixi run train --config greenhouse_env_config.yaml \
-  --env GreenhousePlain --algorithm DQN --discrete-actions \
-  --realtime
+  --env GreenhousePlain --algorithm DQN \
+  --discrete-actions --realtime
 ```
 
 The `--config` file points to `pyrobosim_ros_gym/config/greenhouse_env_config.yaml`, which lets you easily set up different algorithms and training parameters.
@@ -521,7 +522,7 @@ Let's speed things up.
 # Run simulation headless, i.e., without the GUI
 pixi run start_world --env GreenhousePlain --headless
 
-# No "realtime" flag, i.e., run actions as fast as possible
+# W/o "realtime", run actions as fast as possible
 pixi run train --config greenhouse_env_config.yaml \
   --env GreenhousePlain --algorithm DQN --discrete-actions
 ```
@@ -532,16 +533,16 @@ We are running with `--seed 42` by default, but you can change it.
 
 ## Exercise 3: Visualizing Training Progress
 
-Stable Baselines 3 has visualization support for [TensorBoard](https://www.tensorflow.org/tensorboard).
-
+SB3 has visualization support for [TensorBoard](https://www.tensorflow.org/tensorboard).
 By adding the `--log` argument, a log file will be written to the `train_logs` folder.
 
 ```bash
 pixi run train --config greenhouse_env_config.yaml \
-  --env GreenhousePlain --algorithm DQN --discrete-actions --log
+  --env GreenhousePlain --algorithm DQN \
+  --discrete-actions --log
 ```
 
-Open TensorBoard and follow the URL displayed (usually `http://localhost:6006/`).
+Open TensorBoard and follow the URL (usually <http://localhost:6006/>).
 
 ```bash
 pixi run tensorboard
