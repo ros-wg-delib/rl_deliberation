@@ -360,28 +360,89 @@ Example: Soft Actor-Critic (SAC) ([Haarnoja et al., 2018](https://arxiv.org/abs/
 
 :::
 
-## Our Reinforcement Learning Algorithms
+## Available Algorithms
 
-### Deep Q Network (DQN)
+### DQN
 
-Learns a Q-function $Q(s, a)$.
-Introduced _experience replay_ (off-policy) and _target networks_.
-[Mnih et al., 2013](https://arxiv.org/abs/1312.5602), [Mnih et al., 2015](https://www.nature.com/articles/nature14236), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/dqn.html)
+__Deep Q Network__
 
-### Advantage Actor-Critic (A2C)
+::: columns
+:::: {.column width=50%}
+\small
+Learns a Q-function $Q(s, a)$. Introduced _experience replay_ and _target networks_.
+::::
+:::: {.column width=25%}
+\small
+Off-policy  
+Discrete actions
+::::
+:::: {.column width=25%}
+\small
+[Mnih et al., 2013](https://arxiv.org/abs/1312.5602)  
+[SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/dqn.html)
+::::
+:::
 
-Introduced the _advantage function_ $A(s, a) = Q(s, a) - V(s)$ to reduce variance.
-[Mnih et al., 2016](https://arxiv.org/abs/1602.01783), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html)
+### A2C
 
-### Proximal Policy Optimization (PPO)
+__Advantage Actor-Critic__
 
-Optimize policy directly. Uses a _clipped surrogate objective_ to ensure stability.
-[Schulman et al., 2017](https://arxiv.org/abs/1707.06347), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)
+::: columns
+:::: {.column width=50%}
+\small
+$A(s, a) = Q(s, a) - V(s)$ _advantage function_ to reduce variance.
+::::
+:::: {.column width=25%}
+\small
+On-policy  
+Any action space
+::::
+:::: {.column width=25%}
+\small
+[Mnih et al., 2016](https://arxiv.org/abs/1602.01783)  
+[SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html)
+::::
+:::
 
-### Soft Actor-Critic (SAC)
+### PPO
 
-Off-policy algorithm encouraging exploration with _entropy_ term.
-[Haarnoja et al., 2018](https://arxiv.org/abs/1801.01290), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)
+__Proximal Policy Optimization__
+
+::: columns
+:::: {.column width=50%}
+\small
+Optimize policy directly. Uses a _clipped surrogate objective_ for stability.
+::::
+:::: {.column width=25%}
+\small
+On-policy  
+Any action space
+::::
+:::: {.column width=25%}
+\small
+[Schulman et al., 2017](https://arxiv.org/abs/1707.06347) [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)
+::::
+:::
+
+### SAC
+
+__Soft Actor-Critic__
+
+::: columns
+:::: {.column width=50%}
+\small
+Separate Actor & Critic NNs. Exploration by additional _entropy_ term.
+::::
+:::: {.column width=25%}
+Off-policy  
+Cont. actions
+::::
+:::: {.column width=25%}
+\small
+[Haarnoja et al., 2018](https://arxiv.org/abs/1801.01290)  
+[SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)
+:::::
+:::
 
 # Exercises
 
