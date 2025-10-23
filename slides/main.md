@@ -142,22 +142,23 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 ::: columns
 
-:::: column
+:::: {.column width=40%}
 
-Start by exploring the environment.
+Start the environment:
 
 ```bash
-pixi run start_world --env \
-  GreenhousePlain
+pixi run start_world  \
+  --env GreenhousePlain
 ```
 
 ![Greenhouse environment](media/greenhouse.png){height=100px}
 
+__Welcome__  
 You are a robot that has to water plants in a greenhouse.
 
 ::::
 
-:::: column
+:::: {.column width=60%}
 
 Then, in another terminal, run:
 
@@ -173,10 +174,12 @@ Enter action from [0, 1]:
 On this prompt, you can choose:
 
 - __0__: Move forward without watering, or
-- __1__: Water the plant and move on.
+- __1__: Water the plant and move on.  
 
-But be __careful__: If you water the evil plant _(red)_, you will be eaten.
+---
 
+But be __careful__: If you try to water the evil plant _(red)_, you will be eaten.
+  
 ![Evil Plant \tiny flickr/Tippitiwichet](media/venus_flytrap_src_wikimedia_commons_Tippitiwichet.jpg){width=80px}
 
 ::::
@@ -229,7 +232,7 @@ $$
 
 # Introduction: Learning
 
-How do we learn a good policy?
+How do we learn a good policy $\pi: \mathcal{S} \rightarrow \mathcal{A}$?
 
 ## Bellman Equation
 
@@ -241,6 +244,12 @@ $$ = \mathbb{E}_{\pi} [R_{t+1} + \gamma v_{\pi}(S_{t+1}) | S_t = s]$$
 $$ = \sum_{a} \pi(a|s) \sum_{s', r} p(s', r | s, a) [r + \gamma v_{\pi}(s')]$$
 
 Here, $v_{\pi}(s)$ is known as the __state value function__.
+
+## Fundamental optimization goal
+
+So, we can forumlate the problem to find an optimal policy $\pi^*$ as an optimization problem:
+
+$$\pi^* = \arg\max_{\pi} v_{\pi}(s), \quad \forall s \in \mathcal{S}$$
 
 # Introduction: Temporal Differencing
 
