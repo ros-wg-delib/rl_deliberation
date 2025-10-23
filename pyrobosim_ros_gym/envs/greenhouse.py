@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2025, Sebastian Castro, Christian Henkel
+# All rights reserved.
+
+# This source code is licensed under the BSD 3-Clause License.
+# See the LICENSE file in the project root for license information.
+
+"""Utilities for the greenhouse test environment."""
+
 from enum import Enum
 import os
 
@@ -39,6 +49,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         max_steps_per_episode,
         realtime,
         discrete_actions,
+        reward_fn,
         executor=None,
     ):
         """
@@ -50,6 +61,9 @@ class GreenhouseEnv(PyRoboSimRosEnv):
             If -1, there is no limit to number of steps.
         :param realtime: Whether actions take time.
         :param discrete_actions: Choose discrete actions (needed for DQN).
+        :param reward_fn: Function that calculates the reward and termination criteria.
+            The first argument needs to be the environment itself.
+            The output needs to be a (reward, terminated) tuple.
         :param executor: Optional ROS executor. It must be already spinning!
         """
         if sub_type == GreenhouseEnv.sub_types.Plain:
@@ -67,7 +81,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
         super().__init__(
             node,
-            None,  # reward_fn
+            reward_fn,
             None,  # reset_validation_fn
             max_steps_per_episode,
             realtime,
@@ -154,7 +168,7 @@ class GreenhouseEnv(PyRoboSimRosEnv):
         self.world_state = future.result().state
 
         self.step_number += 1
-        reward, terminated = self._calculate_reward(action)
+        reward, terminated = self.reward_fn(action)
         # print(f"{reward=}")
 
         # Execute the remainder of the actions after calculating reward
@@ -190,72 +204,6 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
         result_future = goal_future.result().get_result_async()
         self._spin_future(result_future)
-
-    def _calculate_reward(self, action):
-        reward = 0.0
-        plants_by_distance = self._get_plants_by_distance(self.world_state)
-        # print(f"{action=}")
-
-        robot_location = self.world_state.robots[0].last_visited_location
-
-        if self.battery_level() <= 0.0:
-            print(
-                "🪫 Ran out of battery. "
-                f"Terminated in {self.step_number} steps "
-                f"with watered fraction {self.watered_plant_fraction()}."
-            )
-            return -5.0, True
-
-        if action == 0:  # stay ducked
-            # Robot gets a penalty if it decides to ignore a waterable plant.
-            for plant in self.world_state.objects:
-                if (plant.category == "plant_good") and (
-                    plant.parent == robot_location
-                ):
-                    for location in self.world_state.locations:
-                        if robot_location in location.spawns and location.is_open:
-                            # print("\tPassed over a waterable plant")
-                            reward -= 0.25
-                            break
-            return reward, False
-
-        elif action == 1:  # move up to water
-            for plant in plants_by_distance.values():
-                if plant.parent != robot_location:
-                    continue
-                if plant.category == "plant_good":
-                    if not self.watered[plant.name]:
-                        self.watered[plant.name] = True
-                        reward += 2.0
-                elif plant.category == "plant_evil":
-                    print(
-                        "🌶️ Tried to water an evil plant. "
-                        f"Terminated in {self.step_number} steps "
-                        f"with watered fraction {self.watered_plant_fraction()}."
-                    )
-                    return -5.0, True
-                else:
-                    raise RuntimeError(f"Unknown category {plant.category}")
-            if reward == 0.0:  # nothing watered, wasted water
-                # print("\tWasted water")
-                reward = -0.5
-
-        elif action == 2:  # charging
-            # Reward shaping to get the robot to visit the charger when its
-            # battery is low, but not when it is high.
-            if self.previous_battery_level <= 5.0:
-                # print(f"\tCharged when battery low ({self.previous_battery_level}) :)")
-                reward += 0.5
-            else:
-                # print(f"\tCharged when battery high ({self.previous_battery_level}) :(")
-                reward -= 1.0
-
-        # print(f"{self.watered=}")
-        terminated = all(self.watered.values())
-        if terminated:
-            print(f"💧 Watered all good plants! Succeeded in {self.step_number} steps.")
-
-        return reward, terminated
 
     def watered_plant_fraction(self):
         n_watered = 0
@@ -366,3 +314,129 @@ class GreenhouseEnv(PyRoboSimRosEnv):
 
         result_future = goal_future.result().get_result_async()
         self._spin_future(result_future)
+
+
+def sparse_reward(env, action):
+    """
+    The most basic Greenhouse environment reward function, which provides
+    positive reward if all good plants are watered and negative reward if
+    an evil plant is watered.
+    """
+    reward = 0.0
+    plants_by_distance = env._get_plants_by_distance(env.world_state)
+    robot_location = env.world_state.robots[0].last_visited_location
+
+    if action == 1:  # move up to water
+        for plant in plants_by_distance.values():
+            if plant.parent != robot_location:
+                continue
+            if plant.category == "plant_evil":
+                print(
+                    "🌶️ Tried to water an evil plant. "
+                    f"Terminated in {env.step_number} steps "
+                    f"with watered fraction {env.watered_plant_fraction()}."
+                )
+                return -5.0, True
+
+    terminated = all(env.watered.values())
+    if terminated:
+        print(f"💧 Watered all good plants! Succeeded in {env.step_number} steps.")
+        reward += 8.0
+    return reward, terminated
+
+
+def dense_reward(env, action):
+    """
+    A simple Greenhouse environment reward function that provides reward each time
+    a good plant is watered.
+    """
+    reward = 0.0
+    plants_by_distance = env._get_plants_by_distance(env.world_state)
+    robot_location = env.world_state.robots[0].last_visited_location
+
+    if action == 1:  # move up to water
+        for plant in plants_by_distance.values():
+            if plant.parent != robot_location:
+                continue
+            if plant.category == "plant_good":
+                if not env.watered[plant.name]:
+                    env.watered[plant.name] = True
+                    reward += 2.0
+            elif plant.category == "plant_evil":
+                print(
+                    "🌶️ Tried to water an evil plant. "
+                    f"Terminated in {env.step_number} steps "
+                    f"with watered fraction {env.watered_plant_fraction()}."
+                )
+                return -5.0, True
+            else:
+                raise RuntimeError(f"Unknown category {plant.category}")
+
+    terminated = all(env.watered.values())
+    if terminated:
+        print(f"💧 Watered all good plants! Succeeded in {env.step_number} steps.")
+        reward += 8.0
+    return reward, terminated
+
+
+def full_reward(env, action):
+    """Full (solution) reward function for the Greenhouse environment."""
+    reward = 0.0
+    plants_by_distance = env._get_plants_by_distance(env.world_state)
+    robot_location = env.world_state.robots[0].last_visited_location
+
+    if env.battery_level() <= 0.0:
+        print(
+            "🪫 Ran out of battery. "
+            f"Terminated in {env.step_number} steps "
+            f"with watered fraction {env.watered_plant_fraction()}."
+        )
+        return -5.0, True
+
+    if action == 0:  # stay ducked
+        # Robot gets a penalty if it decides to ignore a waterable plant.
+        for plant in env.world_state.objects:
+            if (plant.category == "plant_good") and (plant.parent == robot_location):
+                for location in env.world_state.locations:
+                    if robot_location in location.spawns and location.is_open:
+                        # print("\tPassed over a waterable plant")
+                        reward -= 0.25
+                        break
+        return reward, False
+
+    elif action == 1:  # move up to water
+        for plant in plants_by_distance.values():
+            if plant.parent != robot_location:
+                continue
+            if plant.category == "plant_good":
+                if not env.watered[plant.name]:
+                    env.watered[plant.name] = True
+                    reward += 2.0
+            elif plant.category == "plant_evil":
+                print(
+                    "🌶️ Tried to water an evil plant. "
+                    f"Terminated in {env.step_number} steps "
+                    f"with watered fraction {env.watered_plant_fraction()}."
+                )
+                return -5.0, True
+            else:
+                raise RuntimeError(f"Unknown category {plant.category}")
+        if reward == 0.0:  # nothing watered, wasted water
+            # print("\tWasted water")
+            reward = -0.5
+
+    elif action == 2:  # charging
+        # Reward shaping to get the robot to visit the charger when its
+        # battery is low, but not when it is high.
+        if env.previous_battery_level <= 5.0:
+            # print(f"\tCharged when battery low ({self.previous_battery_level}) :)")
+            reward += 0.5
+        else:
+            # print(f"\tCharged when battery high ({self.previous_battery_level}) :(")
+            reward -= 1.0
+
+    terminated = all(env.watered.values())
+    if terminated:
+        print(f"💧 Watered all good plants! Succeeded in {env.step_number} steps.")
+
+    return reward, terminated

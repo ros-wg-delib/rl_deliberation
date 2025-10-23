@@ -19,16 +19,17 @@ from rclpy.node import Node
 
 from rl_interfaces.action import ExecutePolicy  # type: ignore[attr-defined]
 
+from pyrobosim_ros_gym import get_config
 from pyrobosim_ros_gym.envs import get_env_by_name
 from pyrobosim_ros_gym.policies import model_and_env_type_from_path
 
 
 class PolicyServerNode(Node):
-    def __init__(self, model: str, executor):
+    def __init__(self, args: argparse.Namespace, executor):
         super().__init__("policy_node")
 
         # Load the model and environment
-        self.model, env_type = model_and_env_type_from_path(model)
+        self.model, env_type = model_and_env_type_from_path(args.model)
         self.env = get_env_by_name(
             env_type,
             self,
@@ -36,6 +37,7 @@ class PolicyServerNode(Node):
             max_steps_per_episode=-1,
             realtime=True,
             discrete_actions=isinstance(self.model.action_space, Discrete),
+            reward_fn=get_config(args.config)["training"].get("reward_fn"),
         )
 
         self.action_server = ActionServer(
@@ -46,7 +48,7 @@ class PolicyServerNode(Node):
             cancel_callback=self.cancel_policy,
         )
 
-        self.get_logger().info(f"Started policy node with model '{model}'.")
+        self.get_logger().info(f"Started policy node with model '{self.model}'.")
 
     def cancel_policy(self, goal_handle):
         self.get_logger().info("Canceling policy execution...")
@@ -100,6 +102,11 @@ def main(args=None):
     parser.add_argument(
         "--model", required=True, help="The name of the model to serve."
     )
+    parser.add_argument(
+        "--config",
+        help="Path to the configuration YAML file.",
+        required=True,
+    )
     cli_args = parser.parse_args()
 
     rclpy.init(args=args)
@@ -108,7 +115,7 @@ def main(args=None):
         import threading
 
         threading.Thread(target=executor.spin).start()
-        policy_server = PolicyServerNode(cli_args.model, executor)
+        policy_server = PolicyServerNode(cli_args, executor)
         while True:
             time.sleep(0.5)
     except (KeyboardInterrupt, ExternalShutdownException):

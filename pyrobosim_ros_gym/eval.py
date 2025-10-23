@@ -15,11 +15,13 @@ from rclpy.node import Node
 from gymnasium.spaces import Discrete
 from stable_baselines3.common.base_class import BaseAlgorithm
 
+from pyrobosim_ros_gym import get_config
 from pyrobosim_ros_gym.envs import available_envs_w_subtype, get_env_by_name
 from pyrobosim_ros_gym.policies import ManualPolicy, model_and_env_type_from_path
 
 
-if __name__ == "__main__":
+def get_args() -> argparse.Namespace:
+    """Helper function to parse the command-line arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model",
@@ -33,6 +35,11 @@ if __name__ == "__main__":
         choices=available_envs_w_subtype(),
     )
     parser.add_argument(
+        "--config",
+        help="Path to the configuration YAML file.",
+        required=True,
+    )
+    parser.add_argument(
         "--num-episodes",
         default=3,
         type=int,
@@ -43,6 +50,12 @@ if __name__ == "__main__":
         "--realtime", action="store_true", help="If true, slows down to real time."
     )
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = get_args()
+    config = get_config(args.config)
 
     rclpy.init()
     node = Node("pyrobosim_ros_env")
@@ -56,6 +69,7 @@ if __name__ == "__main__":
             max_steps_per_episode=15,
             realtime=True,
             discrete_actions=True,
+            reward_fn=config["training"].get("reward_fn"),
         )
         model = ManualPolicy(env.action_space)
     else:
@@ -66,6 +80,7 @@ if __name__ == "__main__":
             max_steps_per_episode=15,
             realtime=args.realtime,
             discrete_actions=isinstance(model.action_space, Discrete),
+            reward_fn=config["training"].get("reward_fn"),
         )
 
     # Evaluate the model for some steps
