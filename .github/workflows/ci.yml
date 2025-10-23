@@ -73,7 +73,7 @@ jobs:
       - name: Set up pandoc
         uses: maxheld83/pandoc@v2.1.0
         with:
-          args: "-t beamer main.md -o slides.pdf --listings"
+          args: "-t beamer main.md -o slides.pdf --listings --slide-level=2"
       - name: Upload slides
         uses: actions/upload-artifact@main
         with:

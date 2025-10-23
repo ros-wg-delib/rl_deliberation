@@ -11,8 +11,9 @@ date:
 logo:
 - media/ros-wg-delib.png
 aspectratio: 169
-fontsize: 9pt
+fontsize: 10pt
 colorlinks: true
+indent: false
 header-includes:
   - \usepackage{listings}
   - \usepackage{xcolor}
@@ -26,11 +27,14 @@ header-includes:
     }
   - \hypersetup{urlcolor=blue}
   - \urlstyle{tt}
+  - \setbeamerfont{footline}{size=\large}
   - \setbeamertemplate{navigation symbols}{}
-  - \setbeamertemplate{footline}{\small \hfill \insertframenumber{} / \inserttotalframenumber \hspace*{5pt}}
+  - \setbeamertemplate{footline}{\vspace{2pt} \hspace*{5pt} \insertsection \hfill \insertframenumber{} / \inserttotalframenumber \hspace*{5pt} \vspace{2pt}}
 ---
 
-# Agenda
+# Introduction
+
+## Agenda
 
 | __Time__       | __Topic__                                               |
 |----------------|---------------------------------------------------------|
@@ -41,7 +45,7 @@ header-includes:
 | 15:30 - 16:15  | Evaluating trained agents and running in ROS nodes      |
 | 16:15 - 17:00  | Discussion: ROS 2, RL, and Deliberation                 |
 
-# Software Setup
+## Software Setup
 
 1. Clone the repository
 
@@ -56,7 +60,7 @@ header-includes:
     curl -fsSL https://pixi.sh/install.sh | sh
     ```
 
-    (or <https://pixi.sh/latest/installation> – recommend autocompletion!)
+    (or <https://pixi.sh/latest/installation> – recommend for autocompletion!)
 
 3. Build the project:
 
@@ -70,16 +74,21 @@ header-includes:
     pixi run start_world --env GreenhousePlain
     ```
 
-# Introduction
+## Learning Goals
+
+By the end of this workshop, you will be able to:
+
+- Recognize robotics problems that can be solved with reinforcement learning.
+- Understand the basic concepts and terminology.
+- Have some experience of how different aspects effect training.
+
+## What is Reinforcement Learning (RL)?
 
 ::: columns
 
 :::: column
-__What is Reinforcement Learning (RL)?__
 
----
-
-Basic model:
+### Basic model
 
 - Given an __agent__ and an __environment__.
 - Subject to the __state__ of the environment,
@@ -96,7 +105,9 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 :::
 
-# Introduction: Notation
+## What is Reinforcement Learning (RL)?
+
+### Notation
 
 ::: columns
 
@@ -116,7 +127,7 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 :::
 
-# RL Software in this Workshop
+## RL Software in this Workshop
 
 ::: columns
 
@@ -138,7 +149,7 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 :::
 
-# Exercise 1: You are the agent
+## Exercise 1: You are the agent
 
 ::: columns
 
@@ -186,9 +197,11 @@ But be __careful__: If you try to water the evil plant _(red)_, you will be eate
 
 :::
 
-# Introduction: Environment = MDP
+# Concepts
 
-## MDP
+## Environment = MDP
+
+### MDP
 
 We assume the environment to follow a __Markov Decision Process (MDP)__ model.  
 An MDP is defined as $< \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}>$.
@@ -201,19 +214,30 @@ An MDP is defined as $< \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}>$.
 
 ![(Pessimistic) Example MDP](media/mdp.drawio.png){height=90px}
 
-Implicit to the above is the __Markov Property__:
+## Markovian
+
+### Markov Property
+
+Implicit to the MDP formulation is the __Markov Property__:
 
 The future state $S_{t+1}$ depends only on the current state $S_t$ and action $A_t$,  
 not on the sequence of events that preceded it.
 
-# Introduction: Agent = Policy
+### Practical implication
 
-## Policy
+This is not a direct limitation for practical use, however something to be aware of.
+
+For example, if the history matters, it is possible to include that information in the state representation.
+However, this may not make learning easier.
+
+## Agent = Policy
+
+### Policy
 
 The agent's behavior is defined by a __policy__ $\pi$.
 A policy is a mapping from states to actions: $\pi: \mathcal{S} \rightarrow \mathcal{A}$.
 
-## Reminder
+### Reminder
 
 We are trying to optimize the __cumulative reward__ (or __return__) over time:
 
@@ -230,28 +254,26 @@ $$
 G_t = \sum_{k=0}^{\infty} \gamma^k R_{t+k}
 $$
 
-# Introduction: Learning
+## Learning
 
-How do we learn a good policy $\pi: \mathcal{S} \rightarrow \mathcal{A}$?
-
-## Bellman Equation
+### Bellman Equation
 
 This is probably the __most fundamental equation in RL__.
-It assigns a value to each state $s$ under a policy $\pi$:
+It estimates $v_{\pi}(s)$, known as the __state value function__ when using policy $\pi$:
 
 $$v_{\pi}(s) = \mathbb{E}_{\pi} [G_t | S_t = s]$$
 $$ = \mathbb{E}_{\pi} [R_{t+1} + \gamma v_{\pi}(S_{t+1}) | S_t = s]$$
 $$ = \sum_{a} \pi(a|s) \sum_{s', r} p(s', r | s, a) [r + \gamma v_{\pi}(s')]$$
 
-Here, $v_{\pi}(s)$ is known as the __state value function__.
-
-## Fundamental optimization goal
+### Fundamental optimization goal
 
 So, we can forumlate the problem to find an optimal policy $\pi^*$ as an optimization problem:
 
 $$\pi^* = \arg\max_{\pi} v_{\pi}(s), \quad \forall s \in \mathcal{S}$$
 
-# RL Methods: Temporal Differencing
+# Methods
+
+## Temporal Differencing
 
 The Bellman equation gives rise to __temporal differencing (TD)__ for training a policy.
 
@@ -266,7 +288,7 @@ where
 
 \small (a variant using the __state-action value function__ $Q_{\pi}(s, a)$ is known as __Q-learning__.)
 
-# RL Methods: Tabular Learning
+## Tabular Reinforcement Learning
 
 RL began with known MDPs + discrete states/actions, so $v_{\pi}(s)$ or $q_{\pi}(s,a)$ are __tables__.
 
@@ -290,7 +312,7 @@ Can use __dynamic programming__ to iterate through the entire environment and co
 
 :::
 
-# RL Methods: Model-Free Reinforcement Learning
+## Model-Free Reinforcement Learning
 
 If the state-action space is too large, need to perform __rollouts__ to gain experience.
 
@@ -298,7 +320,7 @@ Key: Balancing __exploitation__ and __exploration__!
 
 ![Model-free RL methods \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=430px}
 
-# RL Methods: Deep Reinforcement Learning
+## Deep Reinforcement Learning
 
 When the observation space is too large (or worse, continuous), tabular methods no longer work.
 
@@ -308,7 +330,7 @@ Need a different function approximator -- _...why not a neural network?_
 
 __Off-policy__: Can train on old experiences from a _replay buffer_.
 
-# RL Methods: Actor-Critic / Policy Gradient Methods
+## Actor-Critic / Policy Gradient Methods
 
 DQN only works for discrete actions, so what about continuous actions?
 
@@ -338,30 +360,32 @@ Example: Soft Actor-Critic (SAC) ([Haarnoja et al., 2018](https://arxiv.org/abs/
 
 :::
 
-# Reference: Reinforcement Learning Algorithms
+## Our Reinforcement Learning Algorithms
 
-## \footnotesize Deep Q Network (DQN)
+### Deep Q Network (DQN)
 
 Learns a Q-function $Q(s, a)$.
 Introduced _experience replay_ (off-policy) and _target networks_.
 [Mnih et al., 2013](https://arxiv.org/abs/1312.5602), [Mnih et al., 2015](https://www.nature.com/articles/nature14236), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/dqn.html)
 
-## \footnotesize Advantage Actor-Critic (A2C)
+### Advantage Actor-Critic (A2C)
 
 Introduced the _advantage function_ $A(s, a) = Q(s, a) - V(s)$ to reduce variance.
 [Mnih et al., 2016](https://arxiv.org/abs/1602.01783), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html)
 
-## \footnotesize Proximal Policy Optimization (PPO)
+### Proximal Policy Optimization (PPO)
 
 Optimize policy directly. Uses a _clipped surrogate objective_ to ensure stability.
 [Schulman et al., 2017](https://arxiv.org/abs/1707.06347), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)
 
-## \footnotesize Soft Actor-Critic (SAC)
+### Soft Actor-Critic (SAC)
 
 Off-policy algorithm encouraging exploration with _entropy_ term.
 [Haarnoja et al., 2018](https://arxiv.org/abs/1801.01290), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)
 
-# Exercise 2: Run with a Random Agent
+# Exercises
+
+## Exercise 2: Run with a Random Agent
 
 ```bash
 pixi run start_world --env GreenhousePlain
@@ -372,7 +396,7 @@ pixi run eval --realtime --model \
 
 ![Greenhouse environment](media/greenhouse.png){height=150px}
 
-# Exercise 3: Training Your First Agent
+## Exercise 3: Training Your First Agent
 
 Start the world.
 
@@ -390,7 +414,7 @@ pixi run train --config greenhouse_env_config.yaml \
 
 The `--config` file points to `pyrobosim_ros_gym/config/greenhouse_env_config.yaml`, which lets you easily set up different algorithms and training parameters.
 
-# Exercise 3: Training Your First Agent (For Real...)
+## Exercise 3: Training Your First Agent (For Real...)
 
 ... this is going to take a while.
 Let's speed things up.
@@ -408,7 +432,7 @@ __NOTE:__ Seeding the training run is important for reproducibility!
 
 We are running with `--seed 42` by default, but you can change it.
 
-# Exercise 3: Visualizing Training Progress
+## Exercise 3: Visualizing Training Progress
 
 Stable Baselines 3 has visualization support for [TensorBoard](https://www.tensorflow.org/tensorboard).
 
@@ -427,7 +451,7 @@ pixi run tensorboard
 
 ![TensorBoard](media/tensorboard.png){width=200px}
 
-# Exercise 3: Evaluating Your Trained Agent
+## Exercise 3: Evaluating Your Trained Agent
 
 Once you have your trained model, you can evaluate it against the simulator.
 
@@ -441,7 +465,7 @@ You can add the `--realtime` flag to slow things down to "real-time" so you can 
 
 ![Example evaluation results](media/eval-results.png){width=240px}
 
-# Exercise 4: Train More Complicated Environment Variations
+## Exercise 4: Train More Complicated Environment Variations
 
 Training the `GreenhousePlain` environment is easy because the environment is _deterministic_; the plants are always in the same locations.
 
@@ -469,7 +493,7 @@ Charging is a new action (id `3`).
 
 :::
 
-# Application: Deploying a Trained Policy as a ROS Node
+## Application: Deploying a Trained Policy as a ROS Node
 
 1. Start an environment of your choice.
 
@@ -495,9 +519,11 @@ pixi shell
 ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 ```
 
-# Discussion 1: Scaling up Learning
+# Discussion
 
-## Parallel simulation
+## Scaling up Learning
+
+### Parallel simulation
 
 ::: columns
 
@@ -539,9 +565,9 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-# Discussion 2: RL Experimentation
+## RL Experimentation
 
-## RNG Seeds
+### RNG Seeds
 
 ::: columns
 
@@ -561,7 +587,7 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-## Hyperparameter Tuning
+### Hyperparameter Tuning
 
 ::: columns
 
@@ -582,9 +608,9 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-# Discussion 3: Deploying Policies to ROS
+## Deploying Policies to ROS
 
-## Python
+### Python
 
 ::: columns
 
@@ -604,7 +630,7 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-## C++
+### C++
 
 ::: columns
 
@@ -626,16 +652,16 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-# Discussion 4: RL for Deliberation
+## RL for Deliberation
 
-## Background
+### Background
 
 __State of the art RL works for fast, low-level control policies (e.g., locomotion)__
 
 - Requires sim-to-real training because on-robot RL is hard and/or unsafe.
 - Alternatives: fine-tune pretrained policies or train _residual_ policies.
 
-## Deliberation
+### Deliberation
 
 __How does this change for deliberation applications?__
 
@@ -644,17 +670,17 @@ __How does this change for deliberation applications?__
 - What kinds of high-level decisions can/should be learned?
 - What should this "safety layer" below look like?
 
-# Further Resources
+## Further Resources
 
-## RL Theory
+### RL Theory
 
-- Sutton + Barto Textbook: <http://incompleteideas.net/book/the-book-2nd.html>
-- David Silver Lectures: <https://davidstarsilver.wordpress.com/teaching/>
+- \small Sutton + Barto Textbook: <http://incompleteideas.net/book/the-book-2nd.html>
+- \small David Silver Lectures: <https://davidstarsilver.wordpress.com/teaching/>
 
-## ROS Deliberation
+### ROS Deliberation
 
-- ROS Deliberation Community Group: <https://github.com/ros-wg-delib>
-  - Join our mailing list and ~monthly meetings!
-- Workshop Repo: <https://github.com/ros-wg-delib/rl_deliberation>
+- \small ROS Deliberation Community Group: <https://github.com/ros-wg-delib>
+- \small Join our mailing list and ~monthly meetings!
+- \small Workshop Repo: <https://github.com/ros-wg-delib/rl_deliberation>
 
 ![Happy RL journey!](media/twitter-post.png){height=100px}
