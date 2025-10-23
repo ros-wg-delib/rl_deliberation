@@ -24,6 +24,8 @@ header-includes:
       commentstyle=\color{gray},
       showstringspaces=false
     }
+  - \hypersetup{urlcolor=blue}
+  - \urlstyle{tt}
   - \setbeamertemplate{navigation symbols}{}
   - \setbeamertemplate{footline}{\small \hfill\insertframenumber{} / \inserttotalframenumber\hfill}
 ---
@@ -57,7 +59,7 @@ header-includes:
     curl -fsSL https://pixi.sh/install.sh | sh
     ```
 
-    (or \href{https://pixi.sh/latest/installation}{\texttt{https://pixi.sh/latest/installation}} – recommend autocompletion!)
+    (or <https://pixi.sh/latest/installation> – recommend autocompletion!)
 
 3. Build the project:
 
@@ -292,11 +294,11 @@ Key: Balancing __exploitation__ and __exploration__!
 
 When the observation space is too large (or worse, continuous), tabular methods no longer work.
 
-Need a different function approximator -- *...why not a neural network?*
+Need a different function approximator -- _...why not a neural network?_
 
 ![Deep Q-Network \tiny ([Mnih et al., 2015](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=280px}
 
-__Off-policy__: Can train on old experiences from a *replay buffer*.
+__Off-policy__: Can train on old experiences from a _replay buffer_.
 
 # Actor-Critic / Policy Gradient Methods
 
@@ -361,7 +363,6 @@ pixi run eval --realtime --model \
 ```
 
 ![Greenhouse environment](media/greenhouse.png){height=150px}
-
 
 # Exercise 3: Training Your First Agent
 
@@ -434,7 +435,7 @@ You can add the `--realtime` flag to slow things down to "real-time" so you can 
 
 # Exercise 4: Train More Complicated Environment Variations
 
-Training the `GreenhousePlain` environment is easy because the environment is *deterministic*; the plants are always in the same locations.
+Training the `GreenhousePlain` environment is easy because the environment is _deterministic_; the plants are always in the same locations.
 
 For harder environments, you may want to switch algorithms (e.g., `PPO` or `SAC`).
 
