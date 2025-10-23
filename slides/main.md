@@ -564,7 +564,7 @@ You can add the `--realtime` flag to slow things down to "real-time" so you can 
 
 ![Example evaluation results](media/eval-results.png){width=240px}
 
-## Exercise 4: Train More Complicated Environment Variations
+## Exercise 4: Train More Complicated Environments
 
 Training the `GreenhousePlain` environment is easy because the environment is _deterministic_; the plants are always in the same locations.
 
@@ -594,6 +594,9 @@ Charging is a new action (id `3`).
 
 ## Application: Deploying a Trained Policy as a ROS Node
 
+::: columns
+:::: {.column width=95%}
+
 1. Start an environment of your choice.
 
 ```bash
@@ -615,8 +618,14 @@ pixi shell
 4. In the shell, send an action goal to run the policy to completion!
 
 ```bash
-ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
+ros2 action send_goal /execute_policy \
+  rl_interfaces/ExecutePolicy {}
 ```
+
+::::
+:::: {.column width=5%}
+::::
+:::
 
 # Discussion
 
@@ -686,14 +695,17 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-### Hyperparameter Tuning
+## Hyperparameter Tuning
 
 ::: columns
 
 :::: column
 
-- __Hyperparameter__: Any user-specified parameter for ML training.
-  - e.g., learning rate, batch/network size, reward weights, ...
+### Hyperparameter
+
+- Any user-specified parameter for ML training.
+
+- e.g., learning rate, batch/network size, reward weights, ...
 
 - Consider using automated tools (e.g., [Optuna](https://github.com/optuna/optuna)) to help you tune hyperparameters.
 
@@ -709,41 +721,26 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 ## Deploying Policies to ROS
 
-### Python
-
 ::: columns
 
-:::: column
+:::: {.column width=40%}
+
+### Python
 
 - Can directly put PyTorch / Tensorflow / etc. models in a `rclpy` node.
-
 - Be careful with threading and CPU/GPU synchronization issues!
-
-::::
-
-:::: column
-
-![[Question from StackOverflow](https://discuss.pytorch.org/t/are-there-any-reasons-why-running-gpu-inference-in-a-thread-would-be-slower/204519)](media/pytorch-threading-question.png){height=90px}
-
-::::
-
-:::
 
 ### C++
 
-::: columns
-
-:::: column
-
 - If you need performance, consider using C++ for inference.
-
 - Facilitated by tools like [ONNX Runtime](https://onnxruntime.ai/inference).
-
 - Can also put your policy inside a `ros2_control` controller for real-time capabilities.
 
 ::::
 
-:::: column
+:::: {.column width=60%}
+
+![[Question on Pytorch](https://discuss.pytorch.org/t/are-there-any-reasons-why-running-gpu-inference-in-a-thread-would-be-slower/204519)](media/pytorch-threading-question.png){height=120px}
 
 ![[ONNX Runtime](https://onnxruntime.ai/inference)](media/onnx-runtime.png){height=100px}
 
@@ -778,8 +775,9 @@ __How does this change for deliberation applications?__
 
 ### ROS Deliberation
 
-- \small ROS Deliberation Community Group: <https://github.com/ros-wg-delib>
+<https://github.com/ros-wg-delib>
+
 - \small Join our mailing list and ~monthly meetings!
 - \small Workshop Repo: <https://github.com/ros-wg-delib/rl_deliberation>
 
-![Happy RL journey!](media/twitter-post.png){height=100px}
+![Happy RL journey! :)](media/twitter-post.png){height=100px}
