@@ -26,6 +26,7 @@ repos:
       - id: requirements-txt-fixer
       - id: sort-simple-yaml
       - id: trailing-whitespace
+        exclude: slides/main.md$
 
   # Autoformats Python code.
   - repo: https://github.com/psf/black.git

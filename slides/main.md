@@ -32,9 +32,6 @@ header-includes:
 
 # Agenda
 
-<!-- Build with `pandoc -t beamer main.md -o main.pdf --listings` -->
-<!-- https://pandoc.org/MANUAL.html#variables-for-beamer-slides -->
-
 | __Time__       | __Topic__                                               |
 |----------------|---------------------------------------------------------|
 | 13:00 - 13:30  | Introduction / Software Setup                           |
@@ -190,7 +187,7 @@ But be __careful__: If you water the evil plant _(red)_, you will be eaten.
 
 ## MDP
 
-We assume the environment to be a __Markov Decision Process (MDP)__.
+We assume the environment to follow a __Markov Decision Process (MDP)__ model.  
 An MDP is defined as $< \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}>$.
 
 - $s \in \mathcal{S}$ states and $a \in \mathcal{A}$ actions as above.
@@ -199,10 +196,12 @@ An MDP is defined as $< \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}>$.
 - $\mathcal{R}$ Reward Function: $R(s, a)$.
   - We will use this to motivate the agent to learn desired behavior.
 
+![(Pessimistic) Example MDP](media/mdp.drawio.png){height=90px}
+
 Implicit to the above is the __Markov Property__:
 
-The future state $S_{t+1}$ depends only on the current state $S_t$
-and action $A_t$, not on the sequence of events that preceded it.
+The future state $S_{t+1}$ depends only on the current state $S_t$ and action $A_t$,  
+not on the sequence of events that preceded it.
 
 # Introduction: Agent = Policy
 
