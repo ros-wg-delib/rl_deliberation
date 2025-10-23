@@ -87,7 +87,7 @@ jobs:
           commit: ${{ github.sha }}
           allowUpdates: true
           name: Workshop Slides
-          tag: ${{ github.sha }}
+          tag: $(date +'%Y-%m-%d')
       - name: Latest slides as release
         uses: ncipollo/release-action@v1
         with:
