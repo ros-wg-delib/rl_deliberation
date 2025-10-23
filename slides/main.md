@@ -251,7 +251,7 @@ So, we can forumlate the problem to find an optimal policy $\pi^*$ as an optimiz
 
 $$\pi^* = \arg\max_{\pi} v_{\pi}(s), \quad \forall s \in \mathcal{S}$$
 
-# Introduction: Temporal Differencing
+# RL Methods: Temporal Differencing
 
 The Bellman equation gives rise to __temporal differencing (TD)__ for training a policy.
 
@@ -266,7 +266,7 @@ where
 
 \small (a variant using the __state-action value function__ $Q_{\pi}(s, a)$ is known as __Q-learning__.)
 
-# Classic RL: Tabular Methods
+# RL Methods: Tabular Learning
 
 RL began with known MDPs + discrete states/actions, so $v_{\pi}(s)$ or $q_{\pi}(s,a)$ are __tables__.
 
@@ -290,7 +290,7 @@ Can use __dynamic programming__ to iterate through the entire environment and co
 
 :::
 
-# Model-Free Reinforcement Learning
+# RL Methods: Model-Free Reinforcement Learning
 
 If the state-action space is too large, need to perform __rollouts__ to gain experience.
 
@@ -298,7 +298,7 @@ Key: Balancing __exploitation__ and __exploration__!
 
 ![Model-free RL methods \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=430px}
 
-# Deep Reinforcement Learning
+# RL Methods: Deep Reinforcement Learning
 
 When the observation space is too large (or worse, continuous), tabular methods no longer work.
 
@@ -308,7 +308,7 @@ Need a different function approximator -- _...why not a neural network?_
 
 __Off-policy__: Can train on old experiences from a _replay buffer_.
 
-# Actor-Critic / Policy Gradient Methods
+# RL Methods: Actor-Critic / Policy Gradient Methods
 
 DQN only works for discrete actions, so what about continuous actions?
 
@@ -408,7 +408,7 @@ __NOTE:__ Seeding the training run is important for reproducibility!
 
 We are running with `--seed 42` by default, but you can change it.
 
-# Visualizing Training Progress
+# Exercise 3: Visualizing Training Progress
 
 Stable Baselines 3 has visualization support for [TensorBoard](https://www.tensorflow.org/tensorboard).
 
@@ -427,7 +427,7 @@ pixi run tensorboard
 
 ![TensorBoard](media/tensorboard.png){width=200px}
 
-# Evaluating Your Trained Agent
+# Exercise 3: Evaluating Your Trained Agent
 
 Once you have your trained model, you can evaluate it against the simulator.
 
@@ -469,7 +469,7 @@ Charging is a new action (id `3`).
 
 :::
 
-# Deploying a Trained Policy as a ROS Node
+# Application: Deploying a Trained Policy as a ROS Node
 
 1. Start an environment of your choice.
 
@@ -582,7 +582,7 @@ ros2 action send_goal /execute_policy rl_interfaces/ExecutePolicy {}
 
 :::
 
-# Discussion 3: Deploying policies to ROS
+# Discussion 3: Deploying Policies to ROS
 
 ## Python
 
@@ -644,7 +644,7 @@ __How does this change for deliberation applications?__
 - What kinds of high-level decisions can/should be learned?
 - What should this "safety layer" below look like?
 
-# Resources
+# Further Resources
 
 ## RL Theory
 
