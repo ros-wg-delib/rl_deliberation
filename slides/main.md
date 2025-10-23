@@ -326,35 +326,72 @@ When the observation space is too large (or worse, continuous), tabular methods 
 
 Need a different function approximator -- _...why not a neural network?_
 
-![Deep Q-Network \tiny ([Mnih et al., 2015](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=280px}
+![Deep Q-Network \tiny ([Mnih et al., 2015](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=250px}
 
 __Off-policy__: Can train on old experiences from a _replay buffer_.
 
 ## Actor-Critic / Policy Gradient Methods
 
-DQN only works for discrete actions, so what about continuous actions?
+DQN only works for discrete actions, so what about continuous actions?  
 
 ::: columns
 
-:::: column
+:::: {.column width=60%}
 
 - __Critic__ approximates value function. Trained via TD learning.
 
 - __Actor__ outputs actions (i.e., the policy). Trained via __policy gradient__, backpropagated from critic loss.
 
-Initial methods were __on-policy__ -- can only train on the latest version of the policy with current experiences.
+- Initial methods were __on-policy__ -- can only train on the latest version of the policy with current experiences.
 Example: Proximal Policy Optimization (PPO) ([Schulman et al., 2017](https://arxiv.org/abs/1707.06347)).
 
-Other approaches train actor and critic at different time scales to allow off-policy.
+- Other approaches train actor and critic at different time scales to allow off-policy.
 Example: Soft Actor-Critic (SAC) ([Haarnoja et al., 2018](https://arxiv.org/abs/1801.01290)).
 
 ::::
 
-:::: column
+:::: {.column width=30%}
 
-![Actor-Critic methods](media/actor-critic.png){width=180px}
+![Actor-Critic methods \tiny ([Sutton + Barto, 2020](http://incompleteideas.net/book/the-book-2nd.html))](media/actor-critic.png){width=160px}
 
-\center \tiny ([Sutton + Barto, 2020](http://incompleteideas.net/book/the-book-2nd.html))
+::::
+
+:::: {.column width=10%}
+::::
+:::
+
+## Concept Comparison
+
+::: columns
+:::: {.column width=45%}
+
+### Exploitation vs. Exploration
+
+__Exploitation__: Based on the current policy, select the action that maximizes expected reward.
+
+__Exploration__: Select actions that may not maximize immediate reward, but could lead to better long-term outcomes.
+
+### On-policy vs. Off-policy
+
+__On-policy__: Learn the value of the policy being carried out by the agent.
+
+__Off-policy__: Learn the value of an optimal policy independently of the agent's actions.
+::::
+
+:::: {.column width=55%}
+Benefits of __exploitation__ and __on-policy__:
+
+$-$ Collect data that is relevant to the current policy.
+
+$-$ More stable learning.
+
+---
+
+Benefits of __exploration__ and __off-policy__:
+
+$-$ Better sample efficiency.
+
+$-$ Relevant for real-world robotics (gathering data is expensive).
 
 ::::
 
