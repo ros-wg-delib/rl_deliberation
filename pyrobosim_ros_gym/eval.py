@@ -36,7 +36,6 @@ def get_args() -> argparse.Namespace:
         help=f"The name of the environment to use if '--model {MANUAL_STR}' is selected.",
         choices=available_envs_w_subtype(),
     )
-
     parser.add_argument(
         "--config",
         help="Path to the configuration YAML file.",

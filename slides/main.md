@@ -531,8 +531,9 @@ Let's speed things up.
 
 Run simulation headless, i.e., without the GUI.
 
+Without "realtime", run actions as fast as possible
+
 ```plain
-# W/o "realtime", run actions as fast as possible
 pixi run train --config greenhouse_env_config.yaml \
   --env GreenhousePlain --algorithm DQN --discrete-actions
 ```
