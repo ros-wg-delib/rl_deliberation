@@ -8,8 +8,6 @@ theme:
 - Bergen
 date:
 - ROSCon 2025 / October 27, 2025
-logo:
-- media/ros-wg-delib.png
 aspectratio: 169
 fontsize: 10pt
 colorlinks: true
@@ -27,9 +25,9 @@ header-includes:
     }
   - \hypersetup{urlcolor=blue}
   - \urlstyle{tt}
-  - \setbeamerfont{footline}{size=\large}
+  - \setbeamerfont{footline}{size=\normalsize}
   - \setbeamertemplate{navigation symbols}{}
-  - \setbeamertemplate{footline}{\vspace{2pt} \hspace*{5pt} \insertsection \hfill \insertframenumber{} / \inserttotalframenumber \hspace*{5pt} \vspace{2pt}}
+  - \setbeamertemplate{footline}{\vspace{2pt} \hspace{2pt} \includegraphics[width=1.85cm]{media/ros-wg-delib.png} \includegraphics[width=1.85cm]{media/roscon25.png} \hspace*{5pt} \insertsection \hfill \insertframenumber{} / \inserttotalframenumber \hspace*{5pt} \vspace{2pt}}
 ---
 
 # Introduction
@@ -384,7 +382,7 @@ __Off-policy__: Learn the value of an optimal policy independently of the agent'
 ::::
 
 :::: {.column width=55%}
-Benefits of __exploitation__ and __on-policy__:
+Benefits of __on-policy__ methods:
 
 $-$ Collect data that is relevant to the current policy.
 
@@ -392,7 +390,7 @@ $-$ More stable learning.
 
 ---
 
-Benefits of __exploration__ and __off-policy__:
+Benefits of __off-policy__ methods:
 
 $-$ Better sample efficiency.
 
@@ -476,6 +474,7 @@ __Soft Actor-Critic__
 Separate Actor & Critic NNs. Exploration by additional _entropy_ term.
 ::::
 :::: {.column width=25%}
+\small
 Off-policy  
 Cont. actions
 ::::
