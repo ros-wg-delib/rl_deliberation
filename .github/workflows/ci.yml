@@ -71,7 +71,7 @@ jobs:
       - name: Run pandoc
         uses: docker://pandoc/latex:3.7
         with:
-          args: "-v ${{ github.workspace }}/slides:/data -t beamer main.md -o slides.pdf --listings --slide-level=2"
+          args: "-t beamer /github/workspace/slides/main.md -o /github/workspace/slides/slides.pdf --listings --slide-level=2"
       - name: Upload slides
         uses: actions/upload-artifact@main
         with:
