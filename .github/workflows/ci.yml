@@ -70,10 +70,12 @@ jobs:
         uses: actions/checkout@v4
       - name: Copy slides to main directory
         run: cp -r slides/* .
-      - name: Set up pandoc
-        uses: maxheld83/pandoc@v2.1.0
+      - name: Run pandoc
+        uses: addnab/docker-run-action@v3
         with:
-          args: "-t beamer main.md -o slides.pdf --listings --slide-level=2"
+          image: pandoc/latex:3.7
+          options: "--rm -v ${{ github.workspace }}:/data"
+          run: "-t beamer main.md -o slides.pdf --listings --slide-level=2"
       - name: Upload slides
         uses: actions/upload-artifact@main
         with:
