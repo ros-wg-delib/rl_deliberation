@@ -353,13 +353,10 @@ Example: Soft Actor-Critic (SAC) ([Haarnoja et al., 2018](https://arxiv.org/abs/
 
 ::::
 
-:::: {.column width=30%}
+:::: {.column width=40%}
 
 ![Actor-Critic methods \tiny ([Sutton + Barto, 2020](http://incompleteideas.net/book/the-book-2nd.html))](media/actor-critic.png){width=160px}
 
-::::
-
-:::: {.column width=10%}
 ::::
 :::
 
@@ -384,7 +381,7 @@ __Off-policy__: Learn the value of an optimal policy independently of the agent'
 :::: {.column width=55%}
 Benefits of __on-policy__ methods:
 
-$-$ Collect data that is relevant to the current policy.
+$-$ Collect data that is relevant under the current policy.
 
 $-$ More stable learning.
 
@@ -607,9 +604,6 @@ __Challenge__: Evaluate your policy on the `GreenhouseRandom` environment!
 
 ## Application: Deploying a Trained Policy as a ROS Node
 
-::: columns
-:::: {.column width=95%}
-
 1. Start an environment of your choice.
 
 ```plain
@@ -635,11 +629,6 @@ pixi shell
 ros2 action send_goal /execute_policy \
   rl_interfaces/ExecutePolicy {}
 ```
-
-::::
-:::: {.column width=5%}
-::::
-:::
 
 # Discussion
 
