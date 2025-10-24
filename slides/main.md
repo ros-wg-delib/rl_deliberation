@@ -227,10 +227,10 @@ not on the sequence of events that preceded it.
 
 ### Practical implication
 
-This is not a direct limitation for practical use, however something to be aware of.
+Not a direct limitation for practical use, but something to be aware of.
 
-For example, if the history matters, it is possible to include that information in the state representation.
-However, this may not make learning easier.
+- E.g., if history matters, include it in the state representation.
+- However, this will not make learning easier.
 
 ## Agent = Policy
 
