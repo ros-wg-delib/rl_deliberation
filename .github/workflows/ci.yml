@@ -68,15 +68,17 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+      - name: Copy slides to main directory
+        run: cp -r slides/* .
       - name: Run pandoc
         uses: docker://pandoc/latex:3.7
         with:
-          args: "-t beamer /github/workspace/slides/main.md -o /github/workspace/slides/slides.pdf --listings --slide-level=2"
+          args: "-t beamer main.md -o slides.pdf --listings --slide-level=2"
       - name: Upload slides
         uses: actions/upload-artifact@main
         with:
           name: slides.pdf
-          path: slides/slides.pdf
+          path: slides.pdf
       - name: Non-latest slides as release
         uses: ncipollo/release-action@v1
         with:
