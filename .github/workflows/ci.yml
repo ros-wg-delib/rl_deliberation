@@ -71,9 +71,8 @@ jobs:
       - name: Copy slides to main directory
         run: cp -r slides/* .
       - name: Run pandoc
-        uses: addnab/docker-run-action@v3
+        uses: docker://pandoc/latex:3.7
         with:
-          image: pandoc/latex:3.7
           options: "--rm -v ${{ github.workspace }}:/data"
           run: "-t beamer main.md -o slides.pdf --listings --slide-level=2"
       - name: Upload slides
