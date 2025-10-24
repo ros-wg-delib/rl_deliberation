@@ -53,3 +53,6 @@ policy_node = "python -m pyrobosim_ros_gym.policy_node"
 
 [tool.pixi.activation]
 scripts = ["install/setup.sh"]
+
+[tool.pixi.target.win-64.activation]
+scripts = ["install/setup.bat"]
