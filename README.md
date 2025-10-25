@@ -89,12 +89,12 @@ Assuming the environment is running, execute the evaluation script in another te
 
 <!--- skip-next --->
 ```bash
-pixi run eval --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1 --realtime
+pixi run eval --config greenhouse_env_config.yaml --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1 --realtime
 ```
 <!--- workdir: /rl_deliberation --->
 <!--
 ```bash
-pixi run start_world --env GreenhousePlain --headless & pid=$!; pixi run eval --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1; kill $pid
+pixi run start_world --env GreenhousePlain --headless & pid=$!; pixi run eval --config greenhouse_env_config.yaml --model pyrobosim_ros_gym/policies/GreenhousePlain_DQN_random.pt --num-episodes 1; kill $pid
 ```
 -->
 
