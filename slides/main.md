@@ -557,9 +557,24 @@ pixi run tensorboard
 
 ![TensorBoard](media/tensorboard.png){width=200px}
 
+## Exercise 3: Reward Engineering
+
+Open the file `pyrobosim_ros_gym/config/greenhouse_env_config.yaml`.
+
+There, you will see 3 options for the `training.reward_fn` parameter.
+
+Train models with each and compare the effects of  __reward shaping__ on results.
+
+\small
+* `sparse_reward` : -5 if evil plant is watered, +8 if _all_ good plants are watered.
+* `dense_reward` : -5 if evil plant is watered, +2 for _each_ good plant that is watered.
+* `full_reward` : Same as above, but adds small penalties for wasting water / passing over a good plant.
+
+![Comparing reward functions](media/tensorboard-reward-compare.png){height=120px}
+
 ## Exercise 3: Evaluating Your Trained Agent
 
-Once you have your trained model, you can evaluate it against the simulator.
+Once you have your trained models, you can evaluate them against the simulator.
 
 ```plain
 pixi run eval --config greenhouse_env_config.yaml \
