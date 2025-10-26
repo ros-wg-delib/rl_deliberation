@@ -77,8 +77,8 @@ header-includes:
 By the end of this workshop, you will be able to:
 
 - Recognize robotics problems that can be solved with reinforcement learning.
-- Understand the basic concepts and terminology.
-- Have some experience of how different aspects effect training.
+- Understand the basic reinforcement learning concepts and terminology.
+- Observe the effects of changing algorithms, hyperparameters, and reward functions on training.
 
 ## What is Reinforcement Learning (RL)?
 
@@ -267,7 +267,7 @@ $$ = \sum_{a} \pi(a|s) \sum_{s', r} p(s', r | s, a) [r + \gamma v_{\pi}(s')]$$
 
 ### Fundamental optimization goal
 
-So, we can forumlate the problem to find an optimal policy $\pi^*$ as an optimization problem:
+So, we can formulate the problem to find an optimal policy $\pi^*$ as an optimization problem:
 
 $$\pi^* = \arg\max_{\pi} v_{\pi}(s), \quad \forall s \in \mathcal{S}$$
 
