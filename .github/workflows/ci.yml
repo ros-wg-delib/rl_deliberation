@@ -70,16 +70,16 @@ jobs:
         uses: actions/checkout@v4
       - name: Copy slides to main directory
         run: cp -r slides/* .
-      - name: Set up pandoc
-        uses: maxheld83/pandoc@v2.1.0
+      - name: Run pandoc
+        uses: docker://pandoc/latex:3.7
         with:
-          args: "-t beamer main.md -o slides.pdf --listings"
+          args: "-t beamer main.md -o slides.pdf --listings --slide-level=2"
       - name: Upload slides
         uses: actions/upload-artifact@main
         with:
           name: slides.pdf
           path: slides.pdf
-      - name: Slides as release
+      - name: Non-latest slides as release
         uses: ncipollo/release-action@v1
         with:
           artifacts: 'slides.pdf'
@@ -87,7 +87,19 @@ jobs:
           commit: ${{ github.sha }}
           allowUpdates: true
           name: Workshop Slides
-          tag: slides
+          tag: slides-pr${{ github.event.pull_request.number }}
+          prerelease: true
+        if: github.event_name == 'pull_request'
+      - name: Latest slides as release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'slides.pdf'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit: ${{ github.sha }}
+          allowUpdates: true
+          name: Workshop Slides
+          tag: slides-latest
+          makeLatest: true
         if: github.ref == 'refs/heads/main'
   pytest:
     runs-on: ubuntu-latest

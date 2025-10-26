@@ -13,6 +13,9 @@ from stable_baselines3 import DQN, PPO, SAC, A2C
 from stable_baselines3.common.base_class import BaseAlgorithm
 
 
+AVAILABLE_POLICIES = {alg.__name__: alg for alg in (DQN, PPO, SAC, A2C)}
+
+
 class ManualPolicy:
     """A policy that allows manual keyboard control of the robot."""
 
@@ -53,14 +56,9 @@ def model_and_env_type_from_path(model_path: str) -> tuple[BaseAlgorithm, str]:
     algorithm = model_name_parts[1]
 
     # Load the model
-    if algorithm == "DQN":
-        model: BaseAlgorithm = DQN.load(model_path, env=None)
-    elif algorithm == "PPO":
-        model = PPO.load(model_path, env=None)
-    elif algorithm == "SAC":
-        model = SAC.load(model_path, env=None)
-    elif algorithm == "A2C":
-        model = A2C.load(model_path, env=None)
+    if algorithm in AVAILABLE_POLICIES:
+        model_class = AVAILABLE_POLICIES[algorithm]
+        model = model_class.load(model_path)
     else:
         raise RuntimeError(f"Invalid algorithm type: {algorithm}")
 

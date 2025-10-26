@@ -8,11 +8,10 @@ theme:
 - Bergen
 date:
 - ROSCon 2025 / October 27, 2025
-logo:
-- media/ros-wg-delib.png
 aspectratio: 169
-fontsize: 9pt
+fontsize: 10pt
 colorlinks: true
+indent: false
 header-includes:
   - \usepackage{listings}
   - \usepackage{xcolor}
@@ -24,14 +23,16 @@ header-includes:
       commentstyle=\color{gray},
       showstringspaces=false
     }
+  - \hypersetup{urlcolor=blue}
+  - \urlstyle{tt}
+  - \setbeamerfont{footline}{size=\normalsize}
   - \setbeamertemplate{navigation symbols}{}
-  - \setbeamertemplate{footline}{\small \hfill\insertframenumber{} / \inserttotalframenumber\hfill}
+  - \setbeamertemplate{footline}{\vspace{2pt} \hspace{2pt} \includegraphics[width=1.85cm]{media/ros-wg-delib.png} \includegraphics[width=1.85cm]{media/roscon25.png} \hspace*{5pt} \insertsection \hfill \insertframenumber{} / \inserttotalframenumber \hspace*{5pt} \vspace{2pt}}
 ---
 
-# Agenda
+# Introduction
 
-<!-- Build with `pandoc -t beamer main.md -o main.pdf --listings` -->
-<!-- https://pandoc.org/MANUAL.html#variables-for-beamer-slides -->
+## Agenda
 
 | __Time__       | __Topic__                                               |
 |----------------|---------------------------------------------------------|
@@ -42,7 +43,7 @@ header-includes:
 | 15:30 - 16:15  | Evaluating trained agents and running in ROS nodes      |
 | 16:15 - 17:00  | Discussion: ROS 2, RL, and Deliberation                 |
 
-# Software Setup
+## Software Setup
 
 1. Clone the repository
 
@@ -57,7 +58,7 @@ header-includes:
     curl -fsSL https://pixi.sh/install.sh | sh
     ```
 
-    (or \href{https://pixi.sh/latest/installation}{\texttt{https://pixi.sh/latest/installation}} – recommend autocompletion!)
+    (or <https://pixi.sh/latest/installation> – recommend for autocompletion!)
 
 3. Build the project:
 
@@ -71,16 +72,21 @@ header-includes:
     pixi run start_world --env GreenhousePlain
     ```
 
-# Introduction
+## Learning Goals
+
+By the end of this workshop, you will be able to:
+
+- Recognize robotics problems that can be solved with reinforcement learning.
+- Understand the basic reinforcement learning concepts and terminology.
+- Observe the effects of changing algorithms, hyperparameters, and reward functions on training.
+
+## What is Reinforcement Learning (RL)?
 
 ::: columns
 
 :::: column
-__What is Reinforcement Learning (RL)?__
 
----
-
-Basic model:
+### Basic model
 
 - Given an __agent__ and an __environment__.
 - Subject to the __state__ of the environment,
@@ -97,7 +103,9 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 :::
 
-# Introduction: Notation
+## What is Reinforcement Learning (RL)?
+
+### Notation
 
 ::: columns
 
@@ -117,7 +125,7 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 :::
 
-# RL Software in this Workshop
+## RL Software in this Workshop
 
 ::: columns
 
@@ -139,26 +147,27 @@ See also [Sutton and Barto, Reinforcement Learning: An Introduction](http://inco
 
 :::
 
-# Exercise 1: You are the agent
+## Exercise 1: You are the agent
 
 ::: columns
 
-:::: column
+:::: {.column width=40%}
 
-You are a robot that has to water plants in a greenhouse.
-
-Start by exploring the environment.
+Start the environment:
 
 ```plain
-pixi run start_world --env \
-  GreenhousePlain
+pixi run start_world  \
+  --env GreenhousePlain
 ```
 
-![Greenhouse environment](media/greenhouse.png){height=120px}
+![Greenhouse environment](media/greenhouse.png){height=100px}
+
+__Welcome__  
+You are a robot that has to water plants in a greenhouse
 
 ::::
 
-:::: column
+:::: {.column width=60%}
 
 Then, in another terminal, run:
 
@@ -176,21 +185,25 @@ Enter action from [0, 1]:
 On this prompt, you can choose:
 
 - __0__: Move forward without watering, or
-- __1__: Water the plant and move on.
+- __1__: Water the plant and move on.  
 
-But be __careful__: If you water the evil plant _(red)_, you will be eaten.
+---
 
+But be __careful__: If you try to water the evil plant _(red)_, you will be eaten.
+  
 ![Evil Plant \tiny flickr/Tippitiwichet](media/venus_flytrap_src_wikimedia_commons_Tippitiwichet.jpg){width=80px}
 
 ::::
 
 :::
 
-# Introduction: Environment = MDP
+# Concepts
 
-## MDP
+## Environment = MDP
 
-We assume the environment to be a __Markov Decision Process (MDP)__.
+### MDP
+
+We assume the environment to follow a __Markov Decision Process (MDP)__ model.  
 An MDP is defined as $< \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}>$.
 
 - $s \in \mathcal{S}$ states and $a \in \mathcal{A}$ actions as above.
@@ -199,19 +212,32 @@ An MDP is defined as $< \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}>$.
 - $\mathcal{R}$ Reward Function: $R(s, a)$.
   - We will use this to motivate the agent to learn desired behavior.
 
-Implicit to the above is the __Markov Property__:
+![(Pessimistic) Example MDP](media/mdp.drawio.png){height=90px}
 
-The future state $S_{t+1}$ depends only on the current state $S_t$
-and action $A_t$, not on the sequence of events that preceded it.
+## Markovian
 
-# Introduction: Agent = Policy
+### Markov Property
 
-## Policy
+Implicit to the MDP formulation is the __Markov Property__:
+
+The future state $S_{t+1}$ depends only on the current state $S_t$ and action $A_t$,  
+not on the sequence of events that preceded it.
+
+### Practical implication
+
+Not a direct limitation for practical use, but something to be aware of.
+
+- E.g., if history matters, include it in the state representation.
+- However, this will not make learning easier.
+
+## Agent = Policy
+
+### Policy
 
 The agent's behavior is defined by a __policy__ $\pi$.
 A policy is a mapping from states to actions: $\pi: \mathcal{S} \rightarrow \mathcal{A}$.
 
-## Reminder
+### Reminder
 
 We are trying to optimize the __cumulative reward__ (or __return__) over time:
 
@@ -228,22 +254,26 @@ $$
 G_t = \sum_{k=0}^{\infty} \gamma^k R_{t+k}
 $$
 
-# Introduction: Learning
+## Learning
 
-How do we learn a good policy?
-
-## Bellman Equation
+### Bellman Equation
 
 This is probably the __most fundamental equation in RL__.
-It assigns a value to each state $s$ under a policy $\pi$:
+It estimates $v_{\pi}(s)$, known as the __state value function__ when using policy $\pi$:
 
 $$v_{\pi}(s) = \mathbb{E}_{\pi} [G_t | S_t = s]$$
 $$ = \mathbb{E}_{\pi} [R_{t+1} + \gamma v_{\pi}(S_{t+1}) | S_t = s]$$
 $$ = \sum_{a} \pi(a|s) \sum_{s', r} p(s', r | s, a) [r + \gamma v_{\pi}(s')]$$
 
-Here, $v_{\pi}(s)$ is known as the __state value function__.
+### Fundamental optimization goal
 
-# Introduction: Temporal Differencing
+So, we can formulate the problem to find an optimal policy $\pi^*$ as an optimization problem:
+
+$$\pi^* = \arg\max_{\pi} v_{\pi}(s), \quad \forall s \in \mathcal{S}$$
+
+# Methods
+
+## Temporal Differencing
 
 The Bellman equation gives rise to __temporal differencing (TD)__ for training a policy.
 
@@ -256,13 +286,14 @@ where
 - $R_{t+1} + \gamma v_{\pi}(S_{t+1}) - v_{\pi}(S_t)$ is the __TD error__.
 - $\alpha$ is the __learning rate__.
 
-\small (a variant using the __state-action value function__ $Q_{\pi}(s, a)$ is known as __Q-learning__.)
+\small (a variant using the __state-action value function__ $Q_{\pi}(s, a)$  
+\small is known as __Q-learning__.)
 
-# Classic RL: Tabular Methods
+## Tabular Reinforcement Learning
 
 RL began with known MDPs + discrete states/actions, so $v_{\pi}(s)$ or $q_{\pi}(s,a)$ are __tables__.
 
-![Grid world \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/grid-world.png){width=180px}
+![Grid world \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf))](media/grid-world.png){width=150px}
 
 Can use __dynamic programming__ to iterate through the entire environment and converge on an optimal policy.
 
@@ -282,7 +313,7 @@ Can use __dynamic programming__ to iterate through the entire environment and co
 
 :::
 
-# Model-Free Reinforcement Learning
+## Model-Free Reinforcement Learning
 
 If the state-action space is too large, need to perform __rollouts__ to gain experience.
 
@@ -290,23 +321,23 @@ Key: Balancing __exploitation__ and __exploration__!
 
 ![Model-free RL methods \tiny ([Silver, 2015](https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-4-model-free-prediction-.pdf))](media/model-free-rl.png){width=430px}
 
-# Deep Reinforcement Learning
+## Deep Reinforcement Learning
 
 When the observation space is too large (or worse, continuous), tabular methods no longer work.
 
-Need a different function approximator -- *...why not a neural network?*
+Need a different function approximator -- _...why not a neural network?_
 
-![Deep Q-Network \tiny ([Mnih et al., 2015](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=280px}
+![Deep Q-Network \tiny ([Mnih et al., 2015](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf))](media/dqn.png){width=250px}
 
-__Off-policy__: Can train on old experiences from a *replay buffer*.
+__Off-policy__: Can train on old experiences from a _replay buffer_.
 
-# Actor-Critic / Policy Gradient Methods
+## Actor-Critic / Policy Gradient Methods
 
-DQN only works for discrete actions, so what about continuous actions?
+DQN only works for discrete actions, so what about continuous actions?  
 
 ::: columns
 
-:::: column
+:::: {.column width=60%}
 
 - __Critic__ approximates value function. Trained via TD learning.
 
@@ -314,54 +345,152 @@ DQN only works for discrete actions, so what about continuous actions?
 
 ---
 
-Initial methods were __on-policy__ -- can only train on the latest version of the policy with current experiences.
+- Initial methods were __on-policy__ -- can only train on the latest version of the policy with current experiences.
 Example: Proximal Policy Optimization (PPO) ([Schulman et al., 2017](https://arxiv.org/abs/1707.06347)).
 
-Other approaches train actor and critic at different time scales to allow off-policy.
+- Other approaches train actor and critic at different time scales to allow off-policy.
 Example: Soft Actor-Critic (SAC) ([Haarnoja et al., 2018](https://arxiv.org/abs/1801.01290)).
 
 ::::
 
-:::: column
+:::: {.column width=40%}
 
-![Actor-Critic methods](media/actor-critic.png){width=180px}
+![Actor-Critic methods \tiny ([Sutton + Barto, 2020](http://incompleteideas.net/book/the-book-2nd.html))](media/actor-critic.png){width=160px}
 
-\center \tiny ([Sutton + Barto, 2020](http://incompleteideas.net/book/the-book-2nd.html))
+::::
+:::
+
+## Concept Comparison
+
+::: columns
+:::: {.column width=45%}
+
+### Exploitation vs. Exploration
+
+__Exploitation__: Based on the current policy, select the action that maximizes expected reward.
+
+__Exploration__: Select actions that may not maximize immediate reward, but could lead to better long-term outcomes.
+
+### On-policy vs. Off-policy
+
+__On-policy__: Learn the value of the policy being carried out by the agent.
+
+__Off-policy__: Learn the value of an optimal policy independently of the agent's actions.
+::::
+
+:::: {.column width=55%}
+Benefits of __on-policy__ methods:
+
+$-$ Collect data that is relevant under the current policy.
+
+$-$ More stable learning.
+
+---
+
+Benefits of __off-policy__ methods:
+
+$-$ Better sample efficiency.
+
+$-$ Relevant for real-world robotics (gathering data is expensive).
 
 ::::
 
 :::
 
-# Reference: Reinforcement Learning Algorithms
+## Available Algorithms
 
-## \footnotesize Deep Q Network (DQN)
+### DQN
 
-Learns a Q-function $Q(s, a)$.
-Introduced _experience replay_ (off-policy) and _target networks_.
-[Mnih et al., 2013](https://arxiv.org/abs/1312.5602), [Mnih et al., 2015](https://www.nature.com/articles/nature14236), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/dqn.html)
+__Deep Q Network__
 
-## \footnotesize Advantage Actor-Critic (A2C)
+::: columns
+:::: {.column width=50%}
+\small
+Learns a Q-function $Q(s, a)$. Introduced _experience replay_ and _target networks_.
+::::
+:::: {.column width=25%}
+\small
+Off-policy  
+Discrete actions
+::::
+:::: {.column width=25%}
+\small
+[Mnih et al., 2013](https://arxiv.org/abs/1312.5602)  
+[SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/dqn.html)
+::::
+:::
 
-Introduced the _advantage function_ $A(s, a) = Q(s, a) - V(s)$ to reduce variance.
-[Mnih et al., 2016](https://arxiv.org/abs/1602.01783), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html)
+### A2C
 
-## \footnotesize Proximal Policy Optimization (PPO)
+__Advantage Actor-Critic__
 
-Optimize policy directly. Uses a _clipped surrogate objective_ to ensure stability.
-[Schulman et al., 2017](https://arxiv.org/abs/1707.06347), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)
+::: columns
+:::: {.column width=50%}
+\small
+$A(s, a) = Q(s, a) - V(s)$ _advantage function_ to reduce variance.
+::::
+:::: {.column width=25%}
+\small
+On-policy  
+Any action space
+::::
+:::: {.column width=25%}
+\small
+[Mnih et al., 2016](https://arxiv.org/abs/1602.01783)  
+[SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html)
+::::
+:::
 
-## \footnotesize Soft Actor-Critic (SAC)
+### PPO
 
-Off-policy algorithm encouraging exploration with _entropy_ term.
-[Haarnoja et al., 2018](https://arxiv.org/abs/1801.01290), [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)
+__Proximal Policy Optimization__
 
-# Which Algorithm to Choose?
+::: columns
+:::: {.column width=50%}
+\small
+Optimize policy directly. Uses a _clipped surrogate objective_ for stability.
+::::
+:::: {.column width=25%}
+\small
+On-policy  
+Any action space
+::::
+:::: {.column width=25%}
+\small
+[Schulman et al., 2017](https://arxiv.org/abs/1707.06347) [SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)
+::::
+:::
+
+### SAC
+
+__Soft Actor-Critic__
+
+::: columns
+:::: {.column width=50%}
+\small
+Separate Actor & Critic NNs. Exploration by additional _entropy_ term.
+::::
+:::: {.column width=25%}
+\small
+Off-policy  
+Cont. actions
+::::
+:::: {.column width=25%}
+\small
+[Haarnoja et al., 2018](https://arxiv.org/abs/1801.01290)  
+[SB3 docs](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)
+:::::
+:::
+
+## Which Algorithm to Choose?
 
 From the lead developer of SB3 (Antonin Raffin): <https://araffin.github.io/slides/rlvs-tips-tricks/>
 
 ![Algorithm choice flowchart](media/sb3-algo-choice.png){width=300px}
 
-# Exercise 2: Run with a Random Agent
+# Exercises
+
+## Exercise 2: Run with a Random Agent
 
 ```plain
 pixi run start_world --env GreenhousePlain
@@ -373,8 +502,7 @@ pixi run eval --realtime \
 
 ![Greenhouse environment](media/greenhouse.png){height=150px}
 
-
-# Exercise 3: Training Your First Agent
+## Exercise 3: Training Your First Agent
 
 Start the world.
 
@@ -386,24 +514,20 @@ Kick off training.
 
 ```plain
 pixi run train --config greenhouse_env_config.yaml \
-  --env GreenhousePlain --algorithm DQN --discrete-actions \
-  --realtime
+  --env GreenhousePlain --algorithm DQN \
+  --discrete-actions --realtime
 ```
 
 The `--config` file points to `pyrobosim_ros_gym/config/greenhouse_env_config.yaml`, which lets you easily set up different algorithms and training parameters.
 
-# Exercise 3: Training Your First Agent (For Real...)
+## Exercise 3: Training Your First Agent (For Real...)
 
 ... this is going to take a while.
 Let's speed things up.
 
 Run simulation headless, i.e., without the GUI.
 
-```plain
-pixi run start_world --env GreenhousePlain --headless
-```
-
-No "realtime" flag, i.e., run actions as fast as possible.
+Without "realtime", run actions as fast as possible
 
 ```plain
 pixi run train --config greenhouse_env_config.yaml \
@@ -414,18 +538,18 @@ __NOTE:__ Seeding the training run is important for reproducibility!
 
 We are running with `--seed 42` by default, but you can change it.
 
-# Visualizing Training Progress
+## Exercise 3: Visualizing Training Progress
 
 SB3 has visualization support for [TensorBoard](https://www.tensorflow.org/tensorboard).
-
 By adding the `--log` argument, a log file will be written to the `train_logs` folder.
 
 ```plain
 pixi run train --config greenhouse_env_config.yaml \
-  --env GreenhousePlain --algorithm DQN --discrete-actions --log
+  --env GreenhousePlain --algorithm DQN \
+  --discrete-actions --log
 ```
 
-Open TensorBoard and follow the URL displayed (usually `http://localhost:6006/`).
+Open TensorBoard and follow the URL (usually `http://localhost:6006/`).
 
 ```plain
 pixi run tensorboard
@@ -433,9 +557,24 @@ pixi run tensorboard
 
 ![TensorBoard](media/tensorboard.png){width=200px}
 
-# Evaluating Your Trained Agent
+## Exercise 3: Reward Engineering
 
-Once you have your trained model, you can evaluate it against the simulator.
+Open the file `pyrobosim_ros_gym/config/greenhouse_env_config.yaml`.
+
+There, you will see 3 options for the `training.reward_fn` parameter.
+
+Train models with each and compare the effects of  __reward shaping__ on results.
+
+\small
+* `sparse_reward` : -5 if evil plant is watered, +8 if _all_ good plants are watered.
+* `dense_reward` : -5 if evil plant is watered, +2 for _each_ good plant that is watered.
+* `full_reward` : Same as above, but adds small penalties for wasting water / passing over a good plant.
+
+![Comparing reward functions](media/tensorboard-reward-compare.png){height=120px}
+
+## Exercise 3: Evaluating Your Trained Agent
+
+Once you have your trained models, you can evaluate them against the simulator.
 
 ```plain
 pixi run eval --config greenhouse_env_config.yaml \
@@ -448,9 +587,9 @@ You can add the `--realtime` flag to slow things down to "real-time" so you can 
 
 ![Example evaluation results](media/eval-results.png){width=240px}
 
-# Exercise 4: Train More Complicated Environment Variations
+## Exercise 4: Train More Complicated Environments
 
-Training the `GreenhousePlain` environment is easy because the environment is *deterministic*; the plants are always in the same locations.
+\small Training the `GreenhousePlain` environment is easy because the environment is _deterministic_; the plants are always in the same locations.
 
 For harder environments, you may want to switch algorithms (e.g., `PPO` or `SAC`).
 
@@ -478,7 +617,7 @@ Charging is a new action (id `3`).
 
 __Challenge__: Evaluate your policy on the `GreenhouseRandom` environment!
 
-# Deploying a Trained Policy as a ROS Node
+## Application: Deploying a Trained Policy as a ROS Node
 
 1. Start an environment of your choice.
 
@@ -506,21 +645,23 @@ ros2 action send_goal /execute_policy \
   rl_interfaces/ExecutePolicy {}
 ```
 
-# Discussion: When to use RL?
+# Discussion
+
+## When to use RL?
 
 Arguably, our simple greenhouse problem did not need RL.
 
 ... but it was nice and educational... right?
 
-## General rules:
+### General rules
 
 - If easy to model, __engineer it by hand__ (e.g., controllers, behavior trees).
 - If difficult to model, but you can provide the answer (e.g., labels or demonstrations), consider __supervised learning__.
 - If difficult to model, and you cannot easily provide an answer, consider __reinforcement learning__.
 
-# Discussion: Scaling up Learning
+## Scaling up Learning
 
-## Parallel simulation
+### Parallel simulation
 
 ::: columns
 
@@ -562,9 +703,9 @@ Arguably, our simple greenhouse problem did not need RL.
 
 :::
 
-# Discussion: RL Experimentation
+## RL Experimentation
 
-## RNG Seeds
+### RNG Seeds
 
 ::: columns
 
@@ -590,8 +731,11 @@ Arguably, our simple greenhouse problem did not need RL.
 
 :::: column
 
-- __Hyperparameter__: Any user-specified parameter for ML training.
-  - e.g., learning rate, batch/network size, reward weights, ...
+### Hyperparameter
+
+- Any user-specified parameter for ML training.
+
+- e.g., learning rate, batch/network size, reward weights, ...
 
 - Consider using automated tools (e.g., [Optuna](https://github.com/optuna/optuna)) to help you tune hyperparameters.
 
@@ -605,43 +749,28 @@ Arguably, our simple greenhouse problem did not need RL.
 
 :::
 
-# Discussion: Deploying policies to ROS
-
-## Python
+## Deploying Policies to ROS
 
 ::: columns
 
-:::: column
+:::: {.column width=40%}
+
+### Python
 
 - Can directly put PyTorch / Tensorflow / etc. models in a `rclpy` node.
-
 - Be careful with threading and CPU/GPU synchronization issues!
 
-::::
-
-:::: column
-
-![[Question from StackOverflow](https://discuss.pytorch.org/t/are-there-any-reasons-why-running-gpu-inference-in-a-thread-would-be-slower/204519)](media/pytorch-threading-question.png){height=90px}
-
-::::
-
-:::
-
-## C++
-
-::: columns
-
-:::: column
+### C++
 
 - If you need performance, consider using C++ for inference.
-
 - Facilitated by tools like [ONNX Runtime](https://onnxruntime.ai/inference).
-
 - Can also put your policy inside a `ros2_control` controller for real-time capabilities.
 
 ::::
 
-:::: column
+:::: {.column width=60%}
+
+![[Question on Pytorch](https://discuss.pytorch.org/t/are-there-any-reasons-why-running-gpu-inference-in-a-thread-would-be-slower/204519)](media/pytorch-threading-question.png){height=120px}
 
 ![[ONNX Runtime](https://onnxruntime.ai/inference)](media/onnx-runtime.png){height=100px}
 
@@ -649,16 +778,16 @@ Arguably, our simple greenhouse problem did not need RL.
 
 :::
 
-# Discussion: RL for Deliberation
+## RL for Deliberation
 
-## Background
+### Background
 
 __State of the art RL works for fast, low-level control policies (e.g., locomotion)__
 
 - Requires sim-to-real training because on-robot RL is hard and/or unsafe.
 - Alternatives: fine-tune pretrained policies or train _residual_ policies.
 
-## Deliberation
+### Deliberation
 
 __How does this change for deliberation applications?__
 
@@ -667,18 +796,18 @@ __How does this change for deliberation applications?__
 - What kinds of high-level decisions can/should be learned?
 - What should this "safety layer" below look like?
 
-# Resources
+## Further Resources
 
-## RL Theory
+### RL Theory
 
-- Sutton + Barto Textbook: <http://incompleteideas.net/book/the-book-2nd.html>
-- David Silver Lectures: <https://davidstarsilver.wordpress.com/teaching/>
-- Stable Baselines3 docs: <https://stable-baselines3.readthedocs.io/>
+- \small Sutton & Barto Textbook: <http://incompleteideas.net/book/the-book-2nd.html>
+- \small David Silver Lectures: <https://davidstarsilver.wordpress.com/teaching/>
+- \small Stable Baselines3 docs: <https://stable-baselines3.readthedocs.io/>
 
-## ROS Deliberation
+### ROS Deliberation
 
-- ROS Deliberation Community Group: <https://github.com/ros-wg-delib>
-  - Join our mailing list and ~monthly meetings!
-- Workshop Repo: <https://github.com/ros-wg-delib/rl_deliberation>
+<https://github.com/ros-wg-delib>
 
-![Happy RL journey!](media/twitter-post.png){height=90px}
+Join our mailing list and ~monthly meetings!
+
+![Happy RL journey! :)](media/twitter-post.png){height=100px}

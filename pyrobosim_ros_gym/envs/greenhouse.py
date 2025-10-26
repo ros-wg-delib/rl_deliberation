@@ -375,7 +375,6 @@ def dense_reward(env, action):
     terminated = all(env.watered.values())
     if terminated:
         print(f"💧 Watered all good plants! Succeeded in {env.step_number} steps.")
-        reward += 8.0
     return reward, terminated
 
 
