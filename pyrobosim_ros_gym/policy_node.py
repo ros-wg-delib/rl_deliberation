@@ -48,7 +48,7 @@ class PolicyServerNode(Node):
             cancel_callback=self.cancel_policy,
         )
 
-        self.get_logger().info(f"Started policy node with model '{self.model}'.")
+        self.get_logger().info(f"Started policy node with model '{args.model}'.")
 
     def cancel_policy(self, goal_handle):
         self.get_logger().info("Canceling policy execution...")
