@@ -527,6 +527,10 @@ Let's speed things up.
 
 Run simulation headless, i.e., without the GUI.
 
+```plain
+pixi run start_world --env GreenhousePlain --headless
+```
+
 Without "realtime", run actions as fast as possible
 
 ```plain
