@@ -525,7 +525,7 @@ The `--config` file points to `pyrobosim_ros_gym/config/greenhouse_env_config.ya
 ... this is going to take a while.
 Let's speed things up.
 
-Run simulation headless, i.e., without the GUI.
+Run simulation headless, i.e., without the GUI, using `--headless` when starting the world.
 
 Without "realtime", run actions as fast as possible
 
