@@ -41,8 +41,9 @@ training:
     n_steps: 8
     policy_kwargs:
       activation_fn: torch.nn.ReLU
-      pi: [16, 8]  # actor size
-      vf: [16, 8]  # critic size
+      net_arch:
+        pi: [16, 8]  # actor size
+        vf: [16, 8]  # critic size
 
   SAC:
     gamma: 0.99
@@ -54,13 +55,15 @@ training:
     target_update_interval: 10
     policy_kwargs:
       activation_fn: torch.nn.ReLU
-      pi: [16, 8]  # actor size
-      qf: [16, 8]  # critic size (SAC uses qf, not vf)
+      net_arch:
+        pi: [16, 8]  # actor size
+        qf: [16, 8]  # critic size (SAC uses qf, not vf)
 
   A2C:
     gamma: 0.99
     learning_rate: 0.0007
     policy_kwargs:
       activation_fn: torch.nn.ReLU
-      pi: [16, 8]  # actor size
-      vf: [16, 8]  # critic size
+      net_arch:
+        pi: [16, 8]  # actor size
+        vf: [16, 8]  # critic size

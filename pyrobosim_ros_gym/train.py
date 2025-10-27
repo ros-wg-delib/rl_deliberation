@@ -83,9 +83,6 @@ if __name__ == "__main__":
     log_path = "train_logs" if args.log else None
     if args.algorithm == "DQN":
         dqn_config = config.get("training", {}).get("DQN", {})
-        if "policy_kwargs" in dqn_config:
-            policy_kwargs = dqn_config["policy_kwargs"]
-            del dqn_config["policy_kwargs"]
         model: BaseAlgorithm = DQN(
             "MlpPolicy",
             env=env,
@@ -95,9 +92,6 @@ if __name__ == "__main__":
         )
     elif args.algorithm == "PPO":
         ppo_config = config.get("training", {}).get("PPO", {})
-        if "policy_kwargs" in ppo_config:
-            policy_kwargs = ppo_config["policy_kwargs"]
-            del ppo_config["policy_kwargs"]
         model = PPO(
             "MlpPolicy",
             env=env,
@@ -107,9 +101,6 @@ if __name__ == "__main__":
         )
     elif args.algorithm == "SAC":
         sac_config = config.get("training", {}).get("SAC", {})
-        if "policy_kwargs" in sac_config:
-            policy_kwargs = sac_config["policy_kwargs"]
-            del sac_config["policy_kwargs"]
         model = SAC(
             "MlpPolicy",
             env=env,
@@ -119,9 +110,6 @@ if __name__ == "__main__":
         )
     elif args.algorithm == "A2C":
         a2c_config = config.get("training", {}).get("A2C", {})
-        if "policy_kwargs" in a2c_config:
-            policy_kwargs = a2c_config["policy_kwargs"]
-            del a2c_config["policy_kwargs"]
         model = A2C(
             "MlpPolicy",
             env=env,
