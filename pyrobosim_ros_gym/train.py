@@ -74,7 +74,7 @@ if __name__ == "__main__":
         args.env,
         node,
         max_steps_per_episode=25,
-        realtime=False,
+        realtime=args.realtime,
         discrete_actions=args.discrete_actions,
         reward_fn=config["training"].get("reward_fn"),
     )
